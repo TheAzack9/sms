@@ -79,10 +79,10 @@ void TMapObjBase::calcRootMatrix()
 	J3DModel* model                  = getModel();
 	const JGeometry::TVec3<f32>& pos = getPosition();
 	const JGeometry::TVec3<f32>& rot = getRotation();
-	MsMtxSetXYZRPH(model->unk20, pos.x, pos.y - unk108, pos.z,
+	MsMtxSetXYZRPH(model->mBaseMtx, pos.x, pos.y - unk108, pos.z,
 	               rot.x * (65536.0f / 360.0f), rot.y * (65536.0f / 360.0f),
 	               rot.z * (65536.0f / 360.0f));
-	model->unk14 = mScaling;
+	model->mBaseScale = mScaling;
 }
 
 Mtx* TMapObjBase::getRootJointMtx() const

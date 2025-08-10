@@ -83,9 +83,9 @@ u8 SMS_IsMarioDashing()
 	return !!ret;
 }
 
-u32 SMS_IsMarioOnYoshi()
+bool SMS_IsMarioOnYoshi()
 {
-	u32 ret = gpMarioOriginal->onYoshi();
+	bool ret = gpMarioOriginal->onYoshi();
 
 	return !!ret;
 }

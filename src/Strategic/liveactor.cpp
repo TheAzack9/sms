@@ -146,11 +146,11 @@ void TLiveActor::calcRootMatrix()
 {
 	J3DModel* model = unk74->getUnk4();
 	// TODO: DEG2SHORT?
-	MsMtxSetXYZRPH(model->unk20, mPosition.x, mPosition.y, mPosition.z,
+	MsMtxSetXYZRPH(model->mBaseMtx, mPosition.x, mPosition.y, mPosition.z,
 	               mRotation.x * (65536.0f / 360.0f),
 	               mRotation.y * (65536.0f / 360.0f),
 	               mRotation.z * (65536.0f / 360.0f));
-	model->unk14 = mScaling;
+	model->mBaseScale = mScaling;
 }
 
 void TLiveActor::kill()
@@ -333,7 +333,7 @@ MtxPtr TLiveActor::getTakingMtx()
 	if (!unk74)
 		return nullptr;
 
-	return unk74->unk4->unk20;
+	return unk74->unk4->mBaseMtx;
 }
 
 void TLiveActor::initAnmSound()

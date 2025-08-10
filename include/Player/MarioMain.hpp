@@ -8,6 +8,41 @@
 
 class TLiveActor;
 
+enum TMarioAttribute {
+	IS_ABOVE_SEWER_FLOOR   = 0x1,
+	IS_VISIBLE             = 0x2,
+	_04                    = 0x4,
+	IS_NPC_TALKING         = 0x8,
+	IS_RECENT_LEFT_WATER   = 0x10,
+	_20                    = 0x20,
+	_40                    = 0x40,
+	_80                    = 0x80,
+	_100                   = 0x100,
+	_200                   = 0x200,
+	IS_GAME_OVER           = 0x400,
+	IS_GROUND_POUND_SIT_UP = 0x800,
+	HAS_HELMET_FLW_CAMERA  = 0x1000,
+	HAS_HELMET             = 0x2000,
+	IS_FLUDD_EMITTING      = 0x4000,
+	HAS_FLUDD              = 0x8000,
+	IS_SHALLOW_WATER       = 0x10000,
+	IS_WATER               = 0x20000,
+	_40000                 = 0x40000,
+	_80000                 = 0x80000,
+	HAS_SHIRT              = 0x100000,
+	IS_PERFORMING          = 0x200000,
+	_400000                = 0x400000,
+	_800000                = 0x800000,
+	_1000000               = 0x1000000,
+	_2000000               = 0x2000000,
+	_4000000               = 0x4000000,
+	_8000000               = 0x8000000,
+	_10000000              = 0x10000000,
+	_20000000              = 0x20000000,
+	_40000000              = 0x40000000,
+	_80000000              = 0x80000000,
+};
+
 struct TRidingInfo {
 	const TLiveActor* unk0;
 	Vec localPos;
@@ -16,7 +51,8 @@ struct TRidingInfo {
 };
 
 class TMarioGamePad;
-
+class TYoshi;
+class TWaterGun;
 // TODO: Add fields
 class TMario : public TTakeActor, public TDrawSyncCallback {
 public:
@@ -47,9 +83,21 @@ public:
 	void windMove(const JGeometry::TVec3<f32>&);
 	void flowMove(const JGeometry::TVec3<f32>&);
 	void warpRequest(const JGeometry::TVec3<f32>&, f32);
-	u32 onYoshi() const;
+	s32 onYoshi() const;
 	void throwMario(const JGeometry::TVec3<f32>&, f32);
 	u32 askJumpIntoWaterEffectExist() const;
+
+	// Fabricated
+	inline bool hasAttribute(u32 attribute) const
+	{
+		bool hasAttribute;
+		if ((this->mAttributes & attribute) != 0) {
+			hasAttribute = true;
+		} else {
+			hasAttribute = false;
+		}
+		return hasAttribute;
+	}
 
 public:
 	u32 _070;
@@ -66,7 +114,8 @@ public:
 
 	JGeometry::TVec3<s16> faceAngle; // 0x94
 	u16 modelFaceAngle;
-	u32 _09C;
+	// u32 _09C; // TODO: I suspect this shouldn't be here as later offsets are
+	// wrong.
 	u32 _0A0;
 	JGeometry::TVec3<f32> vel; // 0xA4
 
@@ -82,7 +131,9 @@ public:
 	void* floor;      // TBGCheckData 0xE0
 	void* waterFloor; // TBGCheckData 0xE4
 
-	JGeometry::TVec3<f32> floorPosition; // 0xE8
+	f32 mCeilingAbove; // 0x00E8
+	f32 mFloorBelow;   // 0x00EC
+	f32 mWaterHeight;  // 0x00F0
 
 	s16 slopeAngle;
 	u16 _0F6;
@@ -96,25 +147,25 @@ public:
 
 	u32 _108[4];
 
-	u32 _118; // gpMarioFlag points here;
+	u32 mAttributes; // gpMarioFlag points here;
 
 	u32 _11C;
 
 	s16 health; // 0x0120
 
 	u16 _122;
-	char _124[0x264];
+	char _124[0x260];
 
 	u16 blooperColor; // TODO: Make enum (0 = red, 1 = yellow, 2 = green)
 
 	char _38A[0x5A];
 
-	void* waterGun; // TWaterGun 0x3E4
+	TWaterGun* waterGun; // 0x3E4
 
 	u32 _3E8;
 	u32 _3EC;
 
-	void* yoshi; // TYoshi 0x3F0
+	TYoshi* yoshi; // TYoshi 0x3F0
 
 	char _3F4[0x0FC];
 

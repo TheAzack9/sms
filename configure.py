@@ -926,7 +926,7 @@ config.libs = [
             Object(NonMatching, "Player/MarioWait.cpp"),
             Object(NonMatching, "Player/SplashManager.cpp"),
             Object(NonMatching, "Player/Tongue.cpp"),
-            Object(NonMatching, "Player/WaterGun.cpp"),
+            Object(NonMatching, "Player/WaterGun.cpp", extra_cflags=["-inline deferred"]),
             Object(NonMatching, "Player/Yoshi.cpp"),
             Object(NonMatching, "Player/MarioEffect.cpp"),
             Object(NonMatching, "Player/MarioSwim.cpp"),

@@ -330,11 +330,11 @@ void TMapModelActor::perform(u32 param_1, JDrama::TGraphics* param_2)
 		return;
 
 	if (!(param_1 & 2)) {
-		MsMtxSetXYZRPH(unk68->getUnk4()->unk20, mPosition.x, mPosition.y,
+		MsMtxSetXYZRPH(unk68->getUnk4()->mBaseMtx, mPosition.x, mPosition.y,
 		               mPosition.z, mRotation.x * (65536.0f / 360.0f),
 		               mRotation.y * (65536.0f / 360.0f),
 		               mRotation.z * (65536.0f / 360.0f));
-		unk68->getUnk4()->unk14 = mScaling;
+		unk68->getUnk4()->mBaseScale = mScaling;
 	}
 	unk68->perform(param_1, param_2);
 }

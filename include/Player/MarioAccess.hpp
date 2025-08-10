@@ -37,7 +37,7 @@ void SMS_MarioWarpRequest(const JGeometry::TVec3<f32>&, f32);
 void SMS_MarioMoveRequest(const JGeometry::TVec3<f32>&);
 
 u8 SMS_IsMarioDashing();
-u32 SMS_IsMarioOnYoshi();
+bool SMS_IsMarioOnYoshi();
 bool SMS_IsMarioOpeningDoor();
 u8 SMS_IsMarioOnWire();
 void SMS_IsMarioSpeedZero();
