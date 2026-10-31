@@ -160,7 +160,7 @@ void SMS_GetLightPerspectiveForEffectMtx(Mtx44);
 
 class TRopePoint {
 public:
-	TRopePoint();
+	TRopePoint() { }
 
 	/* 0x00 */ JGeometry::TVec3<f32> unk0;
 	/* 0x0C */ JGeometry::TVec3<f32> unkC;

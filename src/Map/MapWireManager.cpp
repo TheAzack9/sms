@@ -44,8 +44,7 @@ f32 TMapWireActor::getPosInWire() const
 
 	JGeometry::TVec3<f32> foot = MsPerpendicFootToLineR(start, end, mPosition);
 
-	return JGeometry::TVec3<f32>(foot - start).length()
-	       / JGeometry::TVec3<f32>(end - start).length();
+	return (foot - start).length() / (end - start).length();
 }
 
 void TMapWireActor::getTipPoints(JGeometry::TVec3<f32>* start,
@@ -80,14 +79,12 @@ void TMapWireActor::init(TMapWireActorManager* manager)
 	group->getChildren().push_back(this);
 }
 
-#pragma dont_inline on
 TMapWireActor::TMapWireActor(const char* name)
     : TTakeActor(name)
     , unk70(0)
     , unk74(nullptr)
 {
 }
-#pragma dont_inline off
 
 static void initDraw()
 {
@@ -154,7 +151,6 @@ void TMapWireActorManager::doWireToActor() { }
 
 TMapWireActorManager::TMapWireActorManager(TTakeActor* param_1)
     : unk0(param_1)
-    , unk4("アクター補助")
     , unk7C(0)
 {
 	unk4.init(this);

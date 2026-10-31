@@ -181,7 +181,7 @@ void TLiveActor::load(JSUMemoryInputStream& stream)
 
 void TLiveActor::bind()
 {
-	if (checkLiveFlag(LIVE_FLAG_UNK10))
+	if (checkLiveFlag(LIVE_FLAG_UNK10) != 0)
 		return;
 
 	if (mBinder != nullptr) {
@@ -405,6 +405,11 @@ void TLiveActor::performOnlyDraw(u32 cue, JDrama::TGraphics* graphics)
 	}
 }
 
+void TLiveActor::calcVelocityToJumpToXZ(const JGeometry::TVec3<f32>&, f32,
+                                      f32) const
+{
+}
+
 JGeometry::TVec3<f32>
 TLiveActor::calcVelocityToJumpToY(const JGeometry::TVec3<f32>& param_1,
                                   f32 speed, f32 gravity) const
@@ -419,6 +424,11 @@ f32 TLiveActor::getGravityY() const { return mGravity; }
 BOOL TLiveActor::hasMapCollision() const
 {
 	return mMapCollisionManager ? 1 : 0;
+}
+
+void TLiveActor::getJointTransByName(const char*,
+                                   JGeometry::TVec3<f32>*) const
+{
 }
 
 int TLiveActor::getJointTransByIndex(int param_1,

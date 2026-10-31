@@ -1,3 +1,4 @@
+#include <MSound/MSCalc.hpp>
 #include <MSound/MSoundSE.hpp>
 #include <MSound/MSound.hpp>
 #include <MSound/MSRandVol.hpp>
@@ -590,24 +591,6 @@ bool MSoundSE::checkSoundArea(u32 param_1, const Vec& param_2)
 	return result;
 }
 
-// TODO: find a home for this
-static u32 get_thing(u32 param_1)
-{
-	u32 uVar1 = param_1 >> 30;
-	u32 uVar2 = param_1 >> 12 & 0xF;
-
-	if (uVar1 == 0)
-		return uVar2;
-
-	if (uVar1 == 2)
-		return 0x10;
-
-	if (uVar1 == 3)
-		return 0x11;
-
-	return 0xffffffff;
-}
-
 JAISound* MSoundSE::startSoundActorInner(u32 id, JAISoundHandle* out_handle,
                                          JAIActor* actor, u32 fade,
                                          u8 camera_idx)
@@ -617,14 +600,14 @@ JAISound* MSoundSE::startSoundActorInner(u32 id, JAISoundHandle* out_handle,
 		switch (MSGMSound->unkCD) {
 		case 7:
 			if (!checkSoundArea(MSGMSound->unkCD, *actor->mTranslation)) {
-				if (get_thing(id) != 1 && get_thing(id) != 0)
+				if (MSCalc::getCategory(id) != 1 && MSCalc::getCategory(id) != 0)
 					return nullptr;
 			}
 			break;
 
 		case 8:
 			if (!checkSoundArea(MSGMSound->unkCD, *actor->mTranslation)) {
-				if (get_thing(id) != 1 && get_thing(id) != 0)
+				if (MSCalc::getCategory(id) != 1 && MSCalc::getCategory(id) != 0)
 					return nullptr;
 			}
 

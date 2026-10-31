@@ -946,8 +946,7 @@ void THamuKuri::makeCapFly(TMapObjBase* param_1)
 			holder = this;
 		} else {
 			param_1->mPosition = SMS_GetMarioPos();
-			param_1->mVelocity.set(0.0f, 10.0f, 0.0f);
-			param_1->offLiveFlag(LIVE_FLAG_UNK10);
+			param_1->setVelocityAndFlag10(0.0f, 10.0f, 0.0f);
 			return;
 		}
 	}
@@ -1167,7 +1166,8 @@ MtxPtr THamuKuri::getTakingMtx()
 
 bool THamuKuri::isResignationAttack()
 {
-	if ((unk104.getPoint() - mPosition).length() > unk194) {
+	JGeometry::TVec3<f32> delta = unk104.getPoint();
+	if ((delta -= mPosition).length() > unk194) {
 		unk194 = unk1F4->mSLGiveUpLength.get();
 		return true;
 	}
@@ -2060,8 +2060,7 @@ void TBossDangoHamuKuri::genEventCoin()
 
 	if (coin) {
 		coin->mPosition = mPosition;
-		coin->mVelocity.set(0.0f, 20.0f, 0.0f);
-		coin->offLiveFlag(LIVE_FLAG_UNK10);
+		coin->setVelocityAndFlag10(0.0f, 20.0f, 0.0f);
 		unk18C -= 1;
 	}
 }
@@ -2444,7 +2443,8 @@ DEFINE_NERVE(TNerveHamuKuriGoForSearchActor, TLiveActor)
 		self->setRunAnm();
 
 	if (!self->isAirborne()) {
-		if ((self->unk104.getPoint() - self->mPosition).length() < 200.0f)
+		JGeometry::TVec3<f32> delta = self->unk104.getPoint();
+		if ((delta -= self->mPosition).length() < 200.0f)
 			self->jumpToSearchActor();
 	}
 

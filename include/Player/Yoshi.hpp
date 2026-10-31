@@ -5,6 +5,7 @@
 #include <JSystem/J3D/J3DGraphAnimator/J3DAnimation.hpp>
 #include <MSound/MAnmSound.hpp>
 
+class TBGCheckData;
 class MActor;
 class MActorAnmData;
 class J3DMtxCalc;
@@ -49,6 +50,8 @@ public:
 	void initInLoadAfter();
 	void kill();
 	void movement();
+	void checkGroundYoshi(const JGeometry::TVec3<f32>& position, f32* ground_y,
+	                      const TBGCheckData** ground);
 	BOOL onYoshi();
 	void ride();
 	void setEggYoshiPtr(TEggYoshi*);

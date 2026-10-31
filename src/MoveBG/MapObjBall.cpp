@@ -1250,8 +1250,7 @@ void TBigWatermelon::kill()
 		    mPosition.x, mPosition.y, mPosition.z, ACTOR_TYPE_COIN, true);
 
 		if (mapObj != nullptr) {
-			mapObj->mVelocity.set(0.0f, 25.0f, 0.0f);
-			mapObj->offLiveFlag(LIVE_FLAG_UNK10);
+			mapObj->setVelocityAndFlag10(0.0f, 25.0f, 0.0f);
 			++unk19C;
 		}
 	}

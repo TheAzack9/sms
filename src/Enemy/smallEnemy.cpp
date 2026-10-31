@@ -350,8 +350,7 @@ void TSmallEnemy::genEventCoin()
 
 		if (coin) {
 			coin->mPosition = mPosition;
-			coin->mVelocity.set(0, 20, 0);
-			coin->offLiveFlag(LIVE_FLAG_UNK10);
+			coin->setVelocityAndFlag10(0, 20, 0);
 			--unk18C;
 		}
 	}
@@ -378,10 +377,10 @@ void TSmallEnemy::genEventCoin()
 			if (coin) {
 				coin->mPosition.y = mPosition.y;
 				MsVECNormalize(&local_d0, &local_d0);
-				coin->mVelocity.set(local_d0.x * 4,
-				                    TMsRange<f32>(8.0f, 16.0f).rand(),
-				                    local_d0.z * 4);
-				coin->offLiveFlag(LIVE_FLAG_UNK10);
+				coin->setVelocityAndFlag10(
+				    local_d0.x * 4,
+				    TMsRange<f32>(8.0f, 16.0f).rand(),
+				    local_d0.z * 4);
 			}
 		}
 	}
@@ -1007,7 +1006,7 @@ DEFINE_NERVE(TNerveSmallEnemyJump, TLiveActor)
 	TSmallEnemy* self = (TSmallEnemy*)spine->getBody();
 
 	if (spine->getTime() == 0) {
-		if (self->checkLiveFlag2(LIVE_FLAG_UNK8000)
+		if ((self->checkLiveFlag(LIVE_FLAG_UNK8000) ? TRUE : FALSE)
 		    || self->checkLiveFlag(LIVE_FLAG_UNK40000))
 			return true;
 
@@ -1032,7 +1031,7 @@ DEFINE_NERVE(TNerveSmallEnemyHitWaterJump, TLiveActor)
 	TSmallEnemy* self = (TSmallEnemy*)spine->getBody();
 
 	if (spine->getTime() == 0) {
-		if (self->checkLiveFlag2(LIVE_FLAG_UNK8000)
+		if ((self->checkLiveFlag(LIVE_FLAG_UNK8000) ? TRUE : FALSE)
 		    || self->checkLiveFlag(LIVE_FLAG_UNK40000))
 			return true;
 

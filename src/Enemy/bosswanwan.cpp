@@ -1059,7 +1059,7 @@ bool TBossWanwan::isTailBurning()
 	// return (check on mTemperature?)
 }
 
-bool TBossWanwan::isMarioInSight() { return mIsNearMario; }
+BOOL TBossWanwan::isMarioInSight() { return mIsNearMario; }
 
 BOOL TBossWanwan::isHeadPulled()
 {
@@ -1639,8 +1639,7 @@ DEFINE_NERVE(TNerveBWJump, TLiveActor)
 
 	if (spine->getTime() == 0) {
 		const JGeometry::TVec3<f32>& targetPos
-		    = boss->unk104.unk0 != nullptr ? boss->unk104.unk0->mPosition
-		                                   : boss->unk104.unk4;
+		    = boss->getUnk104().getPoint();
 
 		f32 speed       = boss->unk124->unkC;
 		boss->mVelocity = boss->calcVelocityToJumpToY(targetPos, speed,

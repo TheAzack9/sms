@@ -1,3 +1,4 @@
+#include <MSound/MSCalc.hpp>
 #include <MSound/MSHandle.hpp>
 #include <JSystem/JAudio/JAInterface/JAIGlobalParameter.hpp>
 #include <JSystem/JAudio/JAInterface/JAIConst.hpp>
@@ -57,24 +58,6 @@ f32 MSHandle::cDol_0Rad             = 1.0316f;
 f32 MSHandle::cDol_HalfRad          = 1.5707999f;
 f32 MSHandle::cDol_FullRad          = 2.1099999f;
 
-// TODO: find a home for this
-static u32 get_thing(u32 param_1)
-{
-	u32 uVar1 = param_1 >> 30;
-	u32 uVar2 = param_1 >> 12 & 0xF;
-
-	if (uVar1 == 0)
-		return uVar2;
-
-	if (uVar1 == 2)
-		return 0x10;
-
-	if (uVar1 == 3)
-		return 0x11;
-
-	return 0xffffffff;
-}
-
 f32 MSHandle::MSACos(f32 param_1)
 {
 	s32 iVar1 = (param_1 + 1.0f) * 50.0f;
@@ -90,7 +73,7 @@ f32 MSHandle::MSACos(f32 param_1)
 
 void MSHandle::setSeDistanceParameters()
 {
-	u8 type = smSeCategory[get_thing(mSoundID)].mType;
+	u8 type = smSeCategory[MSCalc::getCategory(mSoundID)].mType;
 	if (mState == SOUNDSTATE_Prepared)
 		type = 0;
 
@@ -129,7 +112,7 @@ void MSHandle::setSeDistancePan(u8 moveTime)
 	f32 thing = ptr->unk18;
 
 	f32 d = calcPan(ptr->mCamSpacePos, thing,
-	                smSeCategory[get_thing(mSoundID)].unk4);
+	                smSeCategory[MSCalc::getCategory(mSoundID)].unk4);
 	setSeInterPan(4, d, moveTime, 0);
 }
 
@@ -211,7 +194,7 @@ void MSHandle::setSeDistanceVolume(u8 moveTime)
 	if (!(swBit & JAISeSwBit_NoDistanceVolume)) {
 		// TODO: inline?
 		u32 tmp = getSwBit() >> JAISeSwBit_DistanceVolumeCurveShift & 0x7;
-		volume = setDistanceVolumeCommon(smSeCategory[get_thing(mSoundID)].unk4,
+		volume = setDistanceVolumeCommon(smSeCategory[MSCalc::getCategory(mSoundID)].unk4,
 		                                 tmp);
 	} else {
 		volume = 1.0f;
@@ -224,7 +207,7 @@ f32 MSHandle::setDistanceVolumeCommon(f32 volume, u8 moveTime)
 {
 	f32 fVar1         = unk1C->unk18;
 	f32 maxVolumeDist = JAIGlobalParameter::getParamMaxVolumeDistance();
-	u32 uVar1         = get_thing(mSoundID);
+	u32 uVar1         = MSCalc::getCategory(mSoundID);
 	return calcVolume(fVar1, volume, maxVolumeDist, moveTime, uVar1);
 }
 

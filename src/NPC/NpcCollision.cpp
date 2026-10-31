@@ -147,5 +147,5 @@ void TBaseNPC::bind()
 		                                 &nextPos.z, 150.0f);
 	}
 
-	setPositionDelta(nextPos - mPosition);
+	mPositionDelta = nextPos - mPosition;
 }

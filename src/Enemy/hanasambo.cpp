@@ -159,10 +159,10 @@ void TSamboFlowerCoinUnit::checkGenCoin()
 				MsVECNormalize(&offset, &offset);
 
 				TSamboFlowerSaveLoadParams* prm = unk0[i]->unk16C;
-				coin->mVelocity.set(offset.x * prm->mSLCoinVelocityXZ.get(),
-				                    8.0f * rate + prm->mSLCoinVelocityY.get(),
-				                    offset.z * prm->mSLCoinVelocityXZ.get());
-				coin->offLiveFlag(LIVE_FLAG_UNK10);
+				coin->setVelocityAndFlag10(
+				    offset.x * prm->mSLCoinVelocityXZ.get(),
+				    8.0f * rate + prm->mSLCoinVelocityY.get(),
+				    offset.z * prm->mSLCoinVelocityXZ.get());
 				spawned++;
 			}
 		}
@@ -1294,10 +1294,10 @@ void TSamboHead::genEventCoin()
 			if (coin) {
 				coin->mPosition.y = mPosition.y;
 				MsVECNormalize(&offset, &offset);
-				coin->mVelocity.set(offset.x * 4.0f,
-				                    TMsRange<f32>(8.0f, 16.0f).rand(),
-				                    offset.z * 4.0f);
-				coin->offLiveFlag(LIVE_FLAG_UNK10);
+				coin->setVelocityAndFlag10(
+				    offset.x * 4.0f,
+				    TMsRange<f32>(8.0f, 16.0f).rand(),
+				    offset.z * 4.0f);
 			}
 		}
 	} else {

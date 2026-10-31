@@ -209,10 +209,11 @@ JGeometry::TVec3<f32> TBoidLeader::calcForces(const TBoid* boid) const
 	force.normalize();
 
 	if (0.0f < mFleeRadius) {
-		f32 tmp = mFleeRadius;
-
 		JGeometry::TVec3<f32> away = boid->mPosition;
-		away -= mFleeTarget.getPoint();
+		// TODO: getPoint()?
+		away -= *(mFleeTarget.unk0 ? &mFleeTarget.unk0->mPosition
+		                          : &mFleeTarget.unk4);
+		f32 tmp = mFleeRadius;
 		f32 d2 = away.squared();
 		if (0.0f < d2 && d2 < tmp * tmp) {
 			away.setLength(mFleeStrength);

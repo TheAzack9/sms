@@ -355,7 +355,7 @@ BOOL TMario::moveRoof()
 	if (mInput & 0x20)
 		return changePlayerStatus(MARIO_STATUS_WAIT_ROOF, mStatusArg, false);
 
-	f32 dist = JGeometry::TVec3<f32>(mPosition - mPrevPosition).length();
+	f32 dist = (mPosition - mPrevPosition).length();
 	dist *= mHangRoofParams.mAnmMult.get();
 	if (mStatusArg & 1)
 		setAnimation(ANIM_LADDER_HANG_MOVE_L, dist);
@@ -692,7 +692,7 @@ BOOL TMario::wireMove(f32 param_1)
 		mWirePosRatio = margin;
 		clean         = false;
 	}
-	if (clean)
+	if (clean == TRUE)
 		mWirePosRatio += delta;
 	return clean;
 }
@@ -1163,7 +1163,19 @@ void TMario::getCurrentPullParams(f32* outV, f32* outH)
 	}
 }
 
-void TMario::setPullingAnm(const JGeometry::TVec3<f32>&, f32) { }
+void TMario::setPullingAnm(const JGeometry::TVec3<f32>& delta, f32 anim_rate)
+{
+	s16 angle = matan(delta.z, delta.x);
+	s16 diff  = angle - mFaceAngle.y;
+	if (diff >= -0x2000 && diff <= 0x2000)
+		setAnimation(ANIM_HOLD_DRAG, anim_rate);
+	if (diff <= -0x6000 || diff >= 0x6000)
+		setAnimation(ANIM_HOLD_BACK, anim_rate);
+	if (diff > -0x6000 && diff < -0x2000)
+		setAnimation(ANIM_HOLD_MOVE_R, anim_rate);
+	if (diff > 0x2000 && diff < 0x6000)
+		setAnimation(ANIM_HOLD_MOVE_L, anim_rate);
+}
 
 BOOL TMario::pulling()
 {
@@ -1241,20 +1253,14 @@ BOOL TMario::pulling()
 			delta = mPosition - mPrevPosition;
 		}
 
-		f32 len = delta.length();
+		f32 dx = delta.x;
+		f32 dy = delta.y;
+		f32 dz = delta.z;
+		f32 len = JGeometry::TUtil<f32>::sqrt(dx * dx + dy * dy + dz * dz);
 		if (len < 1.0f) {
 			setAnimation(ANIM_HOLD_WAIT, animRate);
 		} else {
-			s16 ang  = matan(delta.z, delta.x);
-			s16 adff = ang - mFaceAngle.y;
-			if (adff >= -0x2000 && adff <= 0x2000)
-				setAnimation(ANIM_HOLD_DRAG, animRate);
-			if (adff <= -0x6000 || adff >= 0x6000)
-				setAnimation(ANIM_HOLD_BACK, animRate);
-			if (adff > -0x6000 && adff < -0x2000)
-				setAnimation(ANIM_HOLD_MOVE_R, animRate);
-			if (adff > 0x2000 && adff < 0x6000)
-				setAnimation(ANIM_HOLD_MOVE_L, animRate);
+			setPullingAnm(delta, animRate);
 		}
 		break;
 	}
@@ -1416,7 +1422,7 @@ BOOL TMario::fenceMove()
 				hDot  = unk2F4.x - unk300.x;
 				if ((s16)((182.04445f * unk30C) - (f32)mFaceAngle.y) != 0)
 					hDot = -hDot;
-				dist = JGeometry::TVec3<f32>(unk2F4 - unk300).length();
+				dist = (unk2F4 - unk300).length();
 			}
 
 			f32 absH = hDot;

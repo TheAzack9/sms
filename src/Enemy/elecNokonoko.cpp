@@ -343,10 +343,12 @@ BOOL TElecNokonoko::receiveMessage(THitActor* param_1, u32 param_2)
 bool TElecNokonoko::isResignationAttack()
 {
 	f32 shootRange = unk1A0->mSLCarapaceShootRange.get();
-	if (!checkLiveFlag(LIVE_FLAG_CLIPPED_OUT)
-	    && (unk104.getPoint() - mPosition).length() < shootRange) {
-		mSpine->pushAfterCurrent(&TNerveElecNokonokoShoot::theNerve());
-		return true;
+	if (!checkLiveFlag(LIVE_FLAG_CLIPPED_OUT)) {
+		JGeometry::TVec3<f32> delta = unk104.getPoint();
+		if ((delta -= mPosition).length() < shootRange) {
+			mSpine->pushAfterCurrent(&TNerveElecNokonokoShoot::theNerve());
+			return true;
+		}
 	}
 	return false;
 }
@@ -438,8 +440,7 @@ void TElecNokonoko::genRandomItem()
 		    unk194->mPosition.x, unk194->mPosition.y, unk194->mPosition.z,
 		    ACTOR_TYPE_COIN, true);
 		if (item != nullptr) {
-			item->mVelocity.set(0.0f, 20.0f, 0.0f);
-			item->offLiveFlag(LIVE_FLAG_UNK10);
+			item->setVelocityAndFlag10(0.0f, 20.0f, 0.0f);
 		}
 	}
 }
@@ -631,7 +632,7 @@ void TElecCarapace::shoot()
 void TElecCarapace::setZigParameter()
 {
 	f32 factor = TMsRange<f32>(3.0f, 5.0f).rand();
-	unk178     = factor * (unk104.getPoint() - mPosition).length();
+	unk178     = factor * getGoalDistance(this);
 	unk17C     = TMsRange<f32>(20.0f, 30.0f).rand();
 }
 
@@ -928,7 +929,8 @@ DEFINE_NERVE(TNerveElecCarapaceMove, TLiveActor)
 	self->move();
 	if (self->unk184 != 0) {
 		f32 range = 64.0f * self->unk16C->unk1A0->mSLCarapaceSpeed.get();
-		if ((self->unk104.getPoint() - self->mPosition).length() < range) {
+		JGeometry::TVec3<f32> delta = self->unk104.getPoint();
+		if ((delta -= self->mPosition).length() < range) {
 			if (!self->unk16C->isCatchReady()) {
 				self->unk16C->forceCatchReady();
 			}

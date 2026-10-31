@@ -732,8 +732,7 @@ void TCannon::killerShoot()
 		}
 		JGeometry::TVec3<f32> velocity
 		    = killer->calcVelocityToJumpToY(goal, 5.0f, killer->getGravityY());
-		JGeometry::TVec3<f32> delta = goal;
-		delta -= mPosition;
+		JGeometry::TVec3<f32> delta = goal - mPosition;
 		f32 time = fabsf(MsVECMag2(&delta) / (velocity.x * mVelocityRate));
 		killer->setHoming(false);
 		f32 rate = mVelocityRate;
@@ -764,7 +763,7 @@ void TCannon::killerShoot()
 		killer->mLaunchVelocity = velocity;
 		killer->setVelocity(velocity);
 		killer->onLiveFlag(LIVE_FLAG_AIRBORNE);
-		JGeometry::TVec3<f32> marioDelta = SMS_DistanceFromMarioVec(mPosition);
+		JGeometry::TVec3<f32> marioDelta = SMS_GetMarioPos() - mPosition;
 		goal.x += marioDelta.x;
 		goal.z += marioDelta.z;
 		killer->setGoalPath(TPathNode(goal));
@@ -934,8 +933,7 @@ DEFINE_NERVE(TNerveCannonSearch, TLiveActor)
 	}
 	if (SMSGetApplication()->getCurrArea().getStage() == 5
 	    && SMSGetMarDirector()->getState() == TMarDirector::STATE_UNK1) {
-		JGeometry::TVec3<f32> delta
-		    = SMS_DistanceFromMarioVec(cannon->mPosition);
+		JGeometry::TVec3<f32> delta = SMS_GetMarioPos() - cannon->mPosition;
 		cannon->mRotation.y = MsGetRotFromZaxis(delta).y;
 	} else {
 		cannon->turnToGoal();

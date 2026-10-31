@@ -46,7 +46,8 @@ public:
 	virtual f32 getPhaseShift() const { return 0.0f; }
 	virtual BOOL isReachedToGoal() const
 	{
-		return (unk104.getPoint() - mPosition).length() < 100.0f ? TRUE : FALSE;
+		JGeometry::TVec3<f32> delta = unk104.getPoint();
+		return (delta -= mPosition).length() < 100.0f ? TRUE : FALSE;
 	}
 
 	void calcEnemyRootMatrix();
@@ -132,5 +133,13 @@ public:
 	/* 0x148 */ f32 mBodyScale;
 	/* 0x14C */ f32 mWallRadius;
 };
+
+// TODO: this sure feels like it should be a method of TSpineEnemy
+// fabricated
+static inline f32 getGoalDistance(const TSpineEnemy* enemy)
+{
+	JGeometry::TVec3<f32> delta = enemy->getUnk104().getPoint();
+	return (delta -= enemy->mPosition).length();
+}
 
 #endif

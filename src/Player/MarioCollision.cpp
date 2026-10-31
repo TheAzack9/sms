@@ -24,7 +24,6 @@ void TMario::rumbleStart(int channelDataIdx, int repeatCount)
 
 void TMario::incHP(int hp)
 {
-	// volatile u32 padding[10];
 	if (isUnderWater() || checkFlag(MARIO_FLAG_HELMET_FLW_CAMERA)) {
 		mAir += hp;
 		if (mAir > mMaxAir) {
@@ -118,7 +117,7 @@ bool TMario::isTakeSituation(THitActor* object)
 		return false;
 	}
 
-	f32 dist = JGeometry::TVec3<f32>(object->mPosition - mPosition).length();
+	f32 dist = (object->mPosition - mPosition).length();
 	if (dist > mAttackRadius + object->getDamageRadius()) {
 		return false;
 	}
@@ -275,24 +274,35 @@ void TMario::damageExec(THitActor* hittingActor, int damage, int damageAnimType,
                         int waterEmit, f32 knockbackSpeed, int rumbleFrames,
                         f32 pollutionAmount, s16 invincibilityFrames)
 {
-	// volatile u32 padding[10];
-	u32 animationTypes[16] = {
-		MARIO_STATUS_SAFE_BACK_DOWN,
-		MARIO_STATUS_SHORT_BACK_DOWN,
-		MARIO_STATUS_BACK_DOWN,
-		MARIO_STATUS_WAIT,
-		MARIO_STATUS_JUMP_SHORT_BACK_DOWN,
-		MARIO_STATUS_JUMP_SHORT_BACK_DOWN,
-		MARIO_STATUS_JUMP_BACK_DOWN,
-		MARIO_STATUS_WAIT,
-		MARIO_STATUS_SAFE_FORE_DOWN,
-		MARIO_STATUS_SHORT_FORE_DOWN,
-		MARIO_STATUS_FORE_DOWN,
-		MARIO_STATUS_WAIT,
-		MARIO_STATUS_JUMP_SHORT_FORE_DOWN,
-		MARIO_STATUS_JUMP_SHORT_FORE_DOWN,
-		MARIO_STATUS_JUMP_FORE_DOWN,
-		MARIO_STATUS_WAIT,
+	u32 animationTypes[2][2][4] = {
+		{
+			{
+				MARIO_STATUS_SAFE_BACK_DOWN,
+				MARIO_STATUS_SHORT_BACK_DOWN,
+				MARIO_STATUS_BACK_DOWN,
+				MARIO_STATUS_WAIT,
+			},
+			{
+				MARIO_STATUS_JUMP_SHORT_BACK_DOWN,
+				MARIO_STATUS_JUMP_SHORT_BACK_DOWN,
+				MARIO_STATUS_JUMP_BACK_DOWN,
+				MARIO_STATUS_WAIT,
+			},
+		},
+		{
+			{
+				MARIO_STATUS_SAFE_FORE_DOWN,
+				MARIO_STATUS_SHORT_FORE_DOWN,
+				MARIO_STATUS_FORE_DOWN,
+				MARIO_STATUS_WAIT,
+			},
+			{
+				MARIO_STATUS_JUMP_SHORT_FORE_DOWN,
+				MARIO_STATUS_JUMP_SHORT_FORE_DOWN,
+				MARIO_STATUS_JUMP_FORE_DOWN,
+				MARIO_STATUS_WAIT,
+			},
+		},
 	};
 
 	if (isInvincible())
@@ -309,7 +319,11 @@ void TMario::damageExec(THitActor* hittingActor, int damage, int damageAnimType,
 		return;
 	}
 
-	u32 animOffset1 = checkStatusType(MARIO_STATUS_FLAG_JUMPING) ? 1 : 0;
+	u32 animOffset1;
+	if (checkStatusType(MARIO_STATUS_FLAG_JUMPING))
+		animOffset1 = 1;
+	else
+		animOffset1 = 0;
 	if (onYoshi()) {
 		animOffset1 = true;
 	}
@@ -348,10 +362,9 @@ void TMario::damageExec(THitActor* hittingActor, int damage, int damageAnimType,
 		if (checkStatusType(MARIO_STATUS_FLAG_SWIMMING))
 			canPlayAnimation = false;
 
-		if (canPlayAnimation) {
-			// I don't think this is correct, but was the closest i could get
-			u32 statusIdx = animationTypes[damageAnimType + animOffset1 * 4
-			                               + animOffset2 * 8];
+		if (canPlayAnimation == true) {
+			u32 statusIdx
+			    = animationTypes[animOffset2][animOffset1][damageAnimType];
 			if (isOnWire()) {
 				// Knocked from a wire hang by damage?
 				changePlayerDropping(MARIO_STATUS_WIRE_HANG_LAND_SAFE_DOWN, 0);

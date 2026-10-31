@@ -42,7 +42,7 @@ static const GXColor bodyColor[4] = {
 
 void TYoshi::startVoice(u32 param_1) { }
 
-BOOL YoshiHeadCtrl(J3DNode* param_1, int param_2)
+static BOOL YoshiHeadCtrl(J3DNode* param_1, int param_2)
 {
 	if (param_2 == 0) {
 		const TWaterGun* waterGun = SMS_GetMarioWaterGun();
@@ -207,9 +207,17 @@ void TYoshi::init(TMario* param_1)
 	for (int i = 0; i < 2; ++i)
 		mMirrorModels[i]->getModelData()->onFlag1OnAllShapes();
 
+#ifdef VERSION_GMSJ01
 	mBodyAnmSound = new MAnmSound(SMSGetMSound());
+#else
+	mBodyAnmSound = new MAnmSoundMario(SMSGetMSound());
+#endif
 	mBodyAnmSound->initAnmSound(nullptr, 1, 0.0f);
+#ifdef VERSION_GMSJ01
 	mTongueAnmSound = new MAnmSound(SMSGetMSound());
+#else
+	mTongueAnmSound = new MAnmSoundMario(SMSGetMSound());
+#endif
 	mTongueAnmSound->initAnmSound(nullptr, 1, 0.0f);
 
 	{
@@ -665,7 +673,7 @@ void TYoshi::emitTongue()
 	do {
 		mTongue->movement();
 		// TODO: dumb but matches?
-		if (JGeometry::TVec3<f32>(mTongue->mTipPos - pos).length() > unk90)
+		if ((mTongue->mTipPos - pos).length() > unk90)
 			break;
 		++tries;
 	} while (tries < 10);
@@ -799,6 +807,19 @@ void TYoshi::thinkHoldOut()
 	}
 }
 
+void TYoshi::checkGroundYoshi(const JGeometry::TVec3<f32>& position,
+                             f32* ground_y, const TBGCheckData** ground)
+{
+	*ground_y = gpMap->checkGround(position.x, 200.0f + position.y, position.z,
+	                               ground);
+	for (int i = 0; i < 5; ++i) {
+		if (!(*ground)->isMarioThrough() || (*ground)->isWaterSurface())
+			break;
+		*ground_y = gpMap->checkGround(position.x, *ground_y - 1.0f,
+		                               position.z, ground);
+	}
+}
+
 void TYoshi::movement()
 {
 	if (!SMSGetMarDirector()->isInnerDemoModeNow()
@@ -828,10 +849,16 @@ void TYoshi::movement()
 		SMS_RideMoveByGroundActor(unk94, &mTranslation, &rot);
 		mEggRotSpeed = DEG2SHORTANGLE(rot);
 
+#ifdef VERSION_GMSJ01
 		const TBGCheckData* ground;
 		JGeometry::TVec3<f32> trans = mTranslation;
 		f32 groundY
 		    = gpMap->checkGround(trans.x, 200.0f + trans.y, trans.z, &ground);
+#else
+		const TBGCheckData* ground = nullptr;
+		f32 groundY;
+		checkGroundYoshi(mTranslation, &groundY, &ground);
+#endif
 		mActor->setLightData(ground, mTranslation);
 		unk2C -= mMario->mJumpParams.mGravity.get();
 		mTranslation.y += unk2C;
@@ -914,8 +941,13 @@ void TYoshi::movement()
 		mTongue->movement();
 
 		const TBGCheckData* ground;
+#ifdef VERSION_GMSJ01
 		f32 groundY = gpMap->checkGround(
 		    mTranslation.x, 200.0f + mTranslation.y, mTranslation.z, &ground);
+#else
+		f32 groundY;
+		checkGroundYoshi(mTranslation, &groundY, &ground);
+#endif
 		mActor->setLightData(ground, mTranslation);
 
 		if (mState == STATE_UNMOUNTED && groundY > mTranslation.y) {

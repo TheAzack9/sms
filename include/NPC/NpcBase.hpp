@@ -225,9 +225,12 @@ public:
 	bool isClean() const { return mPollutionAmount == 0.0f; }
 
 	enum {
-		LIVE_FLAG_DONT_TALK   = VERSION_SELECT(0x20000, GMSJ01(0x10000)),
-		LIVE_FLAG_SINK_BOTTOM = VERSION_SELECT(0x1000000, GMSJ01(0x800000)),
-		LIVE_FLAG_DONT_THROW  = VERSION_SELECT(0x40000000, GMSJ01(0x20000000)),
+		LIVE_FLAG_DONT_TALK
+		    = VERSION_SELECT(0x20000, GMSJ01(0x10000), GMSE01(0x10000)),
+		LIVE_FLAG_SINK_BOTTOM
+		    = VERSION_SELECT(0x1000000, GMSJ01(0x800000), GMSE01(0x800000)),
+		LIVE_FLAG_DONT_THROW = VERSION_SELECT(0x40000000, GMSJ01(0x20000000),
+		                                    GMSE01(0x20000000)),
 	};
 
 private:
@@ -292,9 +295,11 @@ private:
 	{
 		bool r31 = false;
 
-		bool bVar12 = checkLiveFlag2(LIVE_FLAG_HIDDEN | LIVE_FLAG_CLIPPED_OUT
-		                             | LIVE_FLAG_DEAD);
-		bool bVar6  = checkLiveFlag2(LIVE_FLAG_UNK1000000);
+		bool bVar12 = checkLiveFlag(LIVE_FLAG_HIDDEN | LIVE_FLAG_CLIPPED_OUT
+		                           | LIVE_FLAG_DEAD)
+		                  ? true
+		                  : false;
+		bool bVar6 = checkLiveFlag(LIVE_FLAG_UNK1000000) ? true : false;
 
 		if (bVar12) {
 			r31 = true;

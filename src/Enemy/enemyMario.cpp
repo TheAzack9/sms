@@ -123,7 +123,11 @@ void TEnemyMario::initValues()
 	unk468 = 0.0f;
 	unk46C = 0.0f;
 
+#ifdef VERSION_GMSJ01
 	mAnmSound = new MAnmSound(SMSGetMSound());
+#else
+	mAnmSound = new MAnmSoundMario(SMSGetMSound());
+#endif
 	mAnmSound->initAnmSound(nullptr, 1, 0.0f);
 	unk4EC          = 0;
 	mBlendLogicOp   = 10;
@@ -587,14 +591,14 @@ void TEnemyMario::initEnemyValues()
 
 void TEnemyMario::kill() { }
 
-f32 TEnemyMario::getStickPower() { }
+f32 TEnemyMario::getStickPower() { return 0.0f; }
 
 void TEnemyMario::setStickAgainstMario() { }
 
 void TEnemyMario::setStickToAngle(s16 angle, f32 power)
 {
-	unk108->mStickHS16 = (JMASSin(angle) * 64.0f) * power;
-	unk108->mStickVS16 = (-JMASCos(angle) * 64.0f) * power;
+	unk108->mStickHS16 = (JMASSin(angle) * getStickPower()) * power;
+	unk108->mStickVS16 = (-JMASCos(angle) * getStickPower()) * power;
 }
 
 void TEnemyMario::resetReplayStatus()
@@ -760,13 +764,6 @@ void TEnemyMario::emWalkAround()
 	setStickToAngle(mFaceAngle.y, 0.5f);
 }
 
-// TODO: this sure feels like it should be a method of TSpineEnemy
-// fabricated
-static inline f32 getGoalDistance(const TSpineEnemy* enemy)
-{
-	return (enemy->getUnk104().getPoint() - enemy->mPosition).length();
-}
-
 void TEnemyMario::emWalkGraph()
 {
 	if (getGoalDistance(mEMario) < 100.0f) {
@@ -776,7 +773,9 @@ void TEnemyMario::emWalkGraph()
 			mEMario->goToRandomEscapeGraphNode();
 	}
 	const JGeometry::TVec3<f32>& goal = mEMario->getUnkF4().getPoint();
-	u16 angle = matan(goal.z - mPosition.z, goal.x - mPosition.x);
+	f32 xDifference = goal.x - mPosition.x;
+	f32 zDifference = goal.z - mPosition.z;
+	u16 angle = matan(zDifference, xDifference);
 	setStickToAngle(angle, 1.0f);
 	++mEMDoingTimer;
 	if (mEMDoingTimer % 100 == 0)
@@ -1119,7 +1118,7 @@ void TEnemyMario::findRunAwayNearestNode()
 		JGeometry::TVec3<f32> point;
 		TGraphWeb* graph = mEMario->getTracer()->getGraph();
 		graph->getGraphNode(i).getPoint(&point);
-		f32 distance = JGeometry::TVec3<f32>(point - mPosition).length();
+		f32 distance = (point - mPosition).length();
 		if (distance < nearestDistance) {
 			secondDistance  = nearestDistance;
 			secondIndex     = nearestIndex;
@@ -1134,8 +1133,8 @@ void TEnemyMario::findRunAwayNearestNode()
 		}
 	}
 
-	if (JGeometry::TVec3<f32>(mPosition - nearestPoint).length()
-	    < JGeometry::TVec3<f32>(mPosition - secondPoint).length()) {
+	if ((mPosition - nearestPoint).length()
+	    < (mPosition - secondPoint).length()) {
 		mRunAwayNodeIndex = nearestIndex;
 	} else {
 		mRunAwayNodeIndex = secondIndex;

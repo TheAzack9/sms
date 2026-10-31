@@ -173,7 +173,6 @@ public:
 
 	void slerp(const TQuat4<T>& param_1, T param_2)
 	{
-		f32 fVar93 = param_2;
 		TQuat4<f32> q1;
 		q1.normalize(*this);
 		TQuat4<f32> q2;
@@ -189,24 +188,23 @@ public:
 			bVar9 = false;
 		}
 
-		f32 fVar11;
 		f32 fVar92;
 		if (1.0f - fVar13 <= TUtil<f32>::epsilon()) {
 			fVar92 = 1.0f - param_2;
 		} else {
-			fVar11 = acosf(fVar13);
+			f32 fVar11 = acosf(fVar13);
 			f32 fVar12 = sinf(fVar11);
 
 			fVar92 = sinf((1.0f - param_2) * fVar11) / fVar12;
-			fVar93 = sinf(param_2 * fVar11) / fVar12;
+			param_2 = sinf(param_2 * fVar11) / fVar12;
 		}
 
 		if (bVar9)
-			fVar93 = -fVar93;
+			param_2 = -param_2;
 
 		this->set(
-		    fVar92 * q1.x + fVar93 * q2.x, fVar92 * q1.y + fVar93 * q2.y,
-		    fVar92 * q1.z + fVar93 * q2.z, fVar92 * q1.w + fVar93 * q2.w);
+		    fVar92 * q1.x + param_2 * q2.x, fVar92 * q1.y + param_2 * q2.y,
+		    fVar92 * q1.z + param_2 * q2.z, fVar92 * q1.w + param_2 * q2.w);
 	}
 };
 

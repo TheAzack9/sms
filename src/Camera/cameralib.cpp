@@ -147,9 +147,9 @@ void CLBRotatePosAndUp(s16 sAngle1, s16 sAngle2,
 	*param_6 = offset + v1;
 	RotateAboutAxis(axis1, -angle1, param_7);
 
-	JGeometry::TVec3<f32> v2 = *param_6 - offset;
-	RotateAboutAxis(axis2, -angle2, &v2);
-	*param_6 = offset + v2;
+	v1 = *param_6 - offset;
+	RotateAboutAxis(axis2, -angle2, &v1);
+	*param_6 = offset + v1;
 	RotateAboutAxis(axis2, -angle2, param_7);
 }
 
@@ -432,4 +432,11 @@ void CLBCalcNearNinePos(JGeometry::TVec3<f32>* out_grid, S16Vec* out_euler,
 	out_grid[2].scaleAdd(halfPlaneDiagonal, local_90, out_grid[4]);
 	local_90.negate();
 	out_grid[6].scaleAdd(halfPlaneDiagonal, local_90, out_grid[4]);
+}
+
+void CLBCalcNearFourPos(JGeometry::TVec3<f32>*, JGeometry::TVec3<f32>*, S16Vec*,
+                        const JGeometry::TVec3<f32>&,
+                        const JGeometry::TVec3<f32>&, s16, f32,
+                        const JGeometry::TVec2<f32>&)
+{
 }

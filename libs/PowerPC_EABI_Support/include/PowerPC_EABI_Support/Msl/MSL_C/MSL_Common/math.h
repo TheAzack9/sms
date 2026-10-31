@@ -121,6 +121,8 @@ extern inline float sqrtf(float x)
 	}
 	return x;
 }
+inline float sqrt(float x) { return sqrtf(x); }
+
 }; // namespace std
 #endif
 

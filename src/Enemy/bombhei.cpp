@@ -195,8 +195,7 @@ void TBombHei::genEventCoin()
 
 			JGeometry::TVec3<f32> vec = SMS_GetMarioPos() - mPosition;
 			MsVECNormalize(&vec, &vec);
-			coin->mVelocity.set(vec.x * 20.0f, 20.0f, vec.z * 20.0f);
-			coin->offLiveFlag(LIVE_FLAG_UNK10);
+			coin->setVelocityAndFlag10(vec.x * 20.0f, 20.0f, vec.z * 20.0f);
 		}
 	}
 }

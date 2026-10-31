@@ -116,8 +116,8 @@ s16 TSelectShineManager::getAngle(const JGeometry::TVec3<f32>& pos)
 	JGeometry::TVec2<f32> dir(300.0f, 1300.0f);
 	dir = dir - JGeometry::TVec2<f32>(pos.x, pos.z);
 	JGeometry::TVec2<f32> forward(0.0f, 1.0f);
-	s16 angle
-	    = 57.295776f * fabsf(atan2f(dir.cross(forward), dir.dot(forward)));
+	f32 cross = dir.cross(forward);
+	s16 angle = 57.295776f * fabsf(atan2f(cross, dir.dot(forward)));
 	if (pos.x > cCenter.x)
 		angle *= -1;
 	return angle;

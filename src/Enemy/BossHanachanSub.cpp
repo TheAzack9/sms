@@ -47,10 +47,9 @@ void BHSCalcRevisionDistXZByRotateZ(f32 direction, f32 degreeZ,
 {
 	JGeometry::TVec2<f32> offset(revisionScale * degreeZ, 0.0f);
 	s16 angle = CLBDegToShortAngle(direction);
-	f32 s     = JMASSin(angle);
-	f32 c     = JMASCos(angle);
-	*x        = offset.x * c + offset.y * s;
-	*z        = -offset.x * s + offset.y * c;
+	const JGeometry::TVec2<f32> sinCos(JMASSin(angle), JMASCos(angle));
+	*x = offset.x * sinCos.y + offset.y * sinCos.x;
+	*z = -offset.x * sinCos.x + offset.y * sinCos.y;
 }
 
 // TODO: why TF are these defined here and aren't even weak? Mysterious.
@@ -142,9 +141,10 @@ void TSphereLink::moveHead(const JGeometry::TVec3<f32>& position)
 	}
 
 	for (int i = 0; i < mPointCount; ++i) {
-		JGeometry::TVec3<f32> displacement
-		    = mPoints[i].mPosition - mPoints[i].mPreviousPosition;
-		mPoints[i].mVelocity         = displacement * mVelocityDamping;
+		f32 damping = mVelocityDamping;
+		JGeometry::TVec3<f32> displacement;
+		displacement = mPoints[i].mPosition - mPoints[i].mPreviousPosition;
+		mPoints[i].mVelocity         = displacement * damping;
 		mPoints[i].mPreviousPosition = mPoints[i].mPosition;
 	}
 }

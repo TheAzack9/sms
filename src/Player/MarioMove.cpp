@@ -2293,7 +2293,10 @@ void TMario::checkWet()
 
 void TMario::gunExec()
 {
-	if (!onYoshi())
+	bool ridingYoshi = false;
+	if (onYoshi())
+		ridingYoshi = true;
+	if (!ridingYoshi)
 		gpModelWaterManager->unk5D5F = 0;
 
 	if (!checkFlag(MARIO_FLAG_HAS_FLUDD) && !onYoshi())

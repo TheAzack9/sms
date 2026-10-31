@@ -400,9 +400,10 @@ void TFruitLauncher::fireObj()
 
 	if (fruit) {
 		fruit->mPosition.set(mPosition);
-		fruit->mVelocity.set(mObjSpeedXZ * (MsRandF() - 0.5f), -mObjSpeedY,
-		                     mObjSpeedXZ * (MsRandF() - 0.5f));
-		fruit->offLiveFlag(LIVE_FLAG_UNK10);
+		fruit->setVelocityAndFlag10(
+		    mObjSpeedXZ * (MsRandF() - 0.5f),
+		    -mObjSpeedY,
+		    mObjSpeedXZ * (MsRandF() - 0.5f));
 		SMSGetMarDirector()->fireStartDemoCamera("フルーツタンクカメラカメラ",
 		                                         &fruit->mPosition, -1, 0.0f,
 		                                         true, nullptr, 0, nullptr, 0);

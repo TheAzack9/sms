@@ -145,8 +145,7 @@ void TEMario::checkCollision()
 	for (s32 i = 0; i < mColCount; ++i) {
 		switch (mCollisions[i]->mActorType) {
 		case ACTOR_TYPE_MARIO: {
-			if (JGeometry::TVec3<f32>(mPosition - mCollisions[i]->getPosition())
-			        .length()
+			if ((mPosition - mCollisions[i]->mPosition).length()
 			    < mEnemyMario->mAttackRange) {
 				mCollisions[i]->receiveMessage(this, HIT_MESSAGE_ATTACK);
 			}
@@ -154,9 +153,7 @@ void TEMario::checkCollision()
 
 		case ACTOR_TYPE_GESO_SURF_BOARD: {
 			if (!mEnemyMario->checkStatusType(MARIO_STATUS_FLAG_UNK10000)) {
-				if (JGeometry::TVec3<f32>(mCollisions[i]->getPosition()
-				                          - mPosition)
-				        .length()
+				if ((mCollisions[i]->mPosition - mPosition).length()
 				    < (mCollisions[i]->getAttackRadius()
 				       + mEnemyMario->getDamageRadius())) {
 					mEnemyMario->changePlayerStatus(MARIO_STATUS_SURF, 0,
@@ -228,9 +225,9 @@ void TEMario::perform(u32 cue, JDrama::TGraphics* graphics)
 	mEnemyMario->perform(cue, graphics);
 
 	if (cue & CUE_MOVE) {
-		mPosition = mEnemyMario->getPosition();
-		mRotation = mEnemyMario->getRotation();
-		mScaling  = mEnemyMario->getScaling();
+		mPosition = mEnemyMario->mPosition;
+		mRotation = mEnemyMario->mRotation;
+		mScaling  = mEnemyMario->mScaling;
 
 		setAttackRadius(mEnemyMario->getAttackRadius());
 		setAttackHeight(mEnemyMario->getAttackHeight());

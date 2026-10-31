@@ -429,8 +429,6 @@ void SMS_GetLightPerspectiveForEffectMtx(Mtx44 mtx)
 	mtx[3][3] = 1.0f;
 }
 
-TRopePoint::TRopePoint() { }
-
 TRope::TRope(u16 count, const JGeometry::TVec3<f32>& pos, f32 p1, f32 p2,
              f32 p3, f32 p4)
 {
@@ -522,10 +520,11 @@ void TRope::moveHead(const JGeometry::TVec3<f32>& param)
 	}
 	constraintHead(param);
 	for (int i = 0; i < mNumPoints; ++i) {
-		f32 scale               = unk8;
-		JGeometry::TVec3<f32> v = mPoints[i].unkC - mPoints[i].unk0;
-		mPoints[i].unk18        = v * scale;
-		mPoints[i].unk0         = mPoints[i].unkC;
+		f32 scale = unk8;
+		JGeometry::TVec3<f32> v;
+		v               = mPoints[i].unkC - mPoints[i].unk0;
+		mPoints[i].unk18 = v * scale;
+		mPoints[i].unk0  = mPoints[i].unkC;
 	}
 }
 

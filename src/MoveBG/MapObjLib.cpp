@@ -101,17 +101,17 @@ void TMapObjBase::throwObjToFront(TMapObjBase* object, f32 y_offset, f32 speed,
 	object->mPosition.set(mPosition.x, mPosition.y + y_offset, mPosition.z);
 	if (mMActor) {
 		MtxPtr mtx = getModel()->getAnmMtx(0);
-		object->mVelocity.set(mtx[0][2] * speed,
-		                      mtx[1][2] * speed + vertical_speed,
-		                      mtx[2][2] * speed);
-		object->offLiveFlag(LIVE_FLAG_UNK10);
+		object->setVelocityAndFlag10(
+		    mtx[0][2] * speed,
+		    mtx[1][2] * speed + vertical_speed,
+		    mtx[2][2] * speed);
 	} else {
 		Mtx mtx;
 		MsMtxSetRotRPH(mtx, mRotation.x, mRotation.y, mRotation.z);
-		object->mVelocity.set(mtx[0][2] * speed,
-		                      mtx[1][2] * speed + vertical_speed,
-		                      mtx[2][2] * speed);
-		object->offLiveFlag(LIVE_FLAG_UNK10);
+		object->setVelocityAndFlag10(
+		    mtx[0][2] * speed,
+		    mtx[1][2] * speed + vertical_speed,
+		    mtx[2][2] * speed);
 	}
 }
 
@@ -123,15 +123,17 @@ void TMapObjBase::throwObjToFrontFromPoint(TMapObjBase* object,
 	object->mPosition.set(point);
 	if (mMActor) {
 		MtxPtr mtx = getModel()->getAnmMtx(0);
-		object->mVelocity.set(mtx[0][2] * speed, mtx[1][2] * speed + y_speed,
-		                      mtx[2][2] * speed);
-		object->offLiveFlag(LIVE_FLAG_UNK10);
+		object->setVelocityAndFlag10(
+		    mtx[0][2] * speed,
+		    mtx[1][2] * speed + y_speed,
+		    mtx[2][2] * speed);
 	} else {
 		Mtx mtx;
 		MsMtxSetRotRPH(mtx, mRotation.x, mRotation.y, mRotation.z);
-		object->mVelocity.set(mtx[0][2] * speed, mtx[1][2] * speed + y_speed,
-		                      mtx[2][2] * speed);
-		object->offLiveFlag(LIVE_FLAG_UNK10);
+		object->setVelocityAndFlag10(
+		    mtx[0][2] * speed,
+		    mtx[1][2] * speed + y_speed,
+		    mtx[2][2] * speed);
 	}
 }
 
@@ -145,9 +147,10 @@ void TMapObjBase::throwObjFromPointWithRot(TMapObjBase* obj,
 
 	Mtx mtx;
 	MsMtxSetRotRPH(mtx, rot.x, rot.y, rot.z);
-	obj->mVelocity.set(mtx[0][2] * speed, mtx[1][2] * speed + up_speed,
-	                   mtx[2][2] * speed);
-	obj->offLiveFlag(LIVE_FLAG_UNK10);
+	obj->setVelocityAndFlag10(
+	    mtx[0][2] * speed,
+	    mtx[1][2] * speed + up_speed,
+	    mtx[2][2] * speed);
 }
 
 bool TMapObjBase::isCoin(THitActor* param_1)

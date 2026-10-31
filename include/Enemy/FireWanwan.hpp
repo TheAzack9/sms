@@ -273,10 +273,6 @@ public:
 		return (TFireWanwanSaveLoadParams*)getSaveParam();
 	}
 
-	bool isTailTaken() const { return unk194->isTaken(); }
-	bool isTailTaken2() const { return isTailTaken(); }
-	bool isTailTaken3() const { return isTailTaken2(); }
-
 public:
 	/* 0x194 */ TFireWanwanTailHit* unk194;
 	/* 0x198 */ f32 mTurnTargetAngle;

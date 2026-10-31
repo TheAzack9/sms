@@ -92,9 +92,10 @@ void TTamaNokoFlower::perform(u32 cue, JDrama::TGraphics* graphics)
 						        true)) {
 							mapObj->mPosition.y = local_c4.y;
 							MsVECNormalize(&local_88, &local_88);
-							mapObj->mVelocity.set(local_88.x * 4.0f, 20.0f,
-							                      local_88.z * 4.0f);
-							mapObj->offLiveFlag(LIVE_FLAG_UNK10);
+							mapObj->setVelocityAndFlag10(
+							    local_88.x * 4.0f,
+							    20.0f,
+							    local_88.z * 4.0f);
 						}
 					}
 				}
@@ -301,7 +302,7 @@ void TTamaNoko::walkBehavior(int param_1, f32 param_2)
 	mTurnSpeed  = getSaveParams2()->mSLTurnSpeedLow.get();
 	mMarchSpeed = getSaveParams2()->mSLMarchSpeedLow.get();
 
-	JGeometry::TVec3<f32> local_34 = unkF4.getPoint();
+	JGeometry::TVec3<f32> local_34 = getUnkF4().getPoint();
 	local_34 -= mPosition;
 	VECMag(&local_34);
 
@@ -569,7 +570,8 @@ void TTamaNoko::forceSleep()
 {
 	updateSquareToMario();
 	f32 giveUpLen = getSaveParams2()->mSLGiveUpLength.get();
-	if (mDistToMarioSquared > giveUpLen * giveUpLen) {
+	giveUpLen *= giveUpLen;
+	if (mDistToMarioSquared > giveUpLen) {
 		setBckAnm(11);
 		mSpine->reset();
 		mSpine->setNext(mSpine->getDefault());

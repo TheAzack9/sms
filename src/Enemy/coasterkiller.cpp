@@ -46,6 +46,23 @@ static const char* killer_bastable[] = {
 	"/scene/killer/bas/killer_search1.bas",   nullptr,
 };
 
+TCoasterEnemyParams::TCoasterEnemyParams(const char* path)
+    : TWalkerEnemyParams(path)
+    , PARAM_INIT(mSLCoasterSpeedInOrder, 20.0f)
+    , PARAM_INIT(mSLCoasterSpeedReverse, 20.0f)
+{
+	TParams::load(mPrmPath);
+	mSLCoasterSpeedInOrder.value = 20.0f;
+	mSLCoasterSpeedReverse.value = 16.0f;
+}
+
+TCoasterKillerSaveLoadParams::TCoasterKillerSaveLoadParams(const char* path)
+    : TCoasterEnemyParams(path)
+    , PARAM_INIT(mSLBombRange, 300.0f)
+{
+	TParams::load(mPrmPath);
+}
+
 void TCoasterEnemy::init(TLiveManager* mgr)
 {
 	TWalkerEnemy::init(mgr);
@@ -65,7 +82,7 @@ void TCoasterEnemy::bind()
 	JGeometry::TVec3<f32> nextPos = mPosition;
 	nextPos += mPositionDelta;
 	nextPos += mVelocity;
-	setPositionDelta(nextPos - mPosition);
+	mPositionDelta = nextPos - mPosition;
 }
 
 void TCoasterEnemy::reset()

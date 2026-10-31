@@ -26,6 +26,18 @@ public:
 	                         JAIAnimeFrameSoundData* frame_data, f32 speed);
 };
 
+class MAnmSoundMario : public MAnmSound {
+public:
+	MAnmSoundMario(MSound* sound)
+	    : MAnmSound(sound)
+	{
+	}
+
+	virtual void startAnimSound(void* interface, u32 id,
+	                            JAISoundHandle* out_handle, JAIActor* actor,
+	                            u8 camera_idx);
+};
+
 class MAnmSoundNPC : public MAnmSound {
 public:
 	MAnmSoundNPC(MSound* sound)

@@ -539,10 +539,10 @@ void THideObjPictureTwin::afterFinishedAnim()
 		Mtx mtx;
 		MsMtxSetRotRPH(mtx, unk174->mRotation.x, unk174->mRotation.y,
 		               unk174->mRotation.z);
-		obj->mVelocity.set(mtx[0][2] * mAppearSpeed,
-		                   mtx[1][2] * mAppearSpeed + mAppearYSpeed,
-		                   mtx[2][2] * mAppearSpeed);
-		obj->offLiveFlag(LIVE_FLAG_UNK10);
+		obj->setVelocityAndFlag10(
+		    mtx[0][2] * mAppearSpeed,
+		    mtx[1][2] * mAppearSpeed + mAppearYSpeed,
+		    mtx[2][2] * mAppearSpeed);
 
 		if (TMapObjBase::isCoin(obj)) {
 			TCoin* coin                 = (TCoin*)obj;

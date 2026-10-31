@@ -46,7 +46,7 @@ TMapObjSeaIndirect::TMapObjSeaIndirect(const char* name)
 }
 
 // fabricated
-static inline bool isAboveWave(const JGeometry::TVec3<f32>& pos)
+static inline bool isAboveWave(const Vec& pos)
 {
 	return pos.y >= gpMapObjWave->getHeight(pos.x, pos.y, pos.z);
 }

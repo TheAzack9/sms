@@ -102,7 +102,8 @@ void TYoshiTongue::emit(const JGeometry::TVec3<f32>& src,
 		mHeadDir = dir;
 
 		mInitialVelocity = dir * mInitialSpeed;
-		mInitialVelocity += vel * 0.5f;
+		JGeometry::TVec3<f32> inheritedVelocity = vel * 0.5f;
+		mInitialVelocity += inheritedVelocity;
 
 		if (mInitialVelocity.y < -50.0f)
 			mInitialVelocity.y = -50.0f;
@@ -116,7 +117,6 @@ void TYoshiTongue::rest(const JGeometry::TVec3<f32>& a,
 {
 }
 
-#pragma dont_inline on
 BOOL TYoshiTongue::canGo()
 {
 	JGeometry::TVec3<f32> toTip = mTipPos - mHeadPos;
@@ -124,8 +124,9 @@ BOOL TYoshiTongue::canGo()
 	if (toTip.dot(mHeadDir) < 0.0f)
 		return false;
 
-	if (gpMap->isTouchedOneWallAndMoveXZ(&mTipPos.x, 10.0f + mTipPos.y,
-	                                     &mTipPos.z, 50.0f))
+	BOOL touchedWall = gpMap->isTouchedOneWallAndMoveXZ(
+	    &mTipPos.x, 10.0f + mTipPos.y, &mTipPos.z, 50.0f);
+	if (touchedWall > 0)
 		return false;
 
 	const TBGCheckData* ground;
@@ -136,8 +137,8 @@ BOOL TYoshiTongue::canGo()
 	}
 
 	const TBGCheckData* roof;
-	f32 roofY
-	    = gpMap->checkRoof(mTipPos.x, mTipPos.y, mTipPos.z, &roof) - 50.0f;
+	f32 roofY = gpMap->checkRoof(mTipPos.x, mTipPos.y, mTipPos.z, &roof);
+	roofY -= 50.0f;
 	if (roofY < mTipPos.y) {
 		mTipPos.y = roofY;
 		return true;
@@ -145,14 +146,13 @@ BOOL TYoshiTongue::canGo()
 
 	return true;
 }
-#pragma dont_inline off
 
 THitActor* TYoshiTongue::findTarget(bool allowExtra, bool checkForward)
 {
 	THitActor* best = nullptr;
 	f32 bestDist    = 10000.0f;
 
-#ifndef VERSION_GMSP01
+#if !defined(VERSION_GMSP01) && !defined(VERSION_GMSE01)
 	for (s32 i = 0; i < mColCount; ++i) {
 		s32 type = mCollisions[i]->mActorType;
 		if (type == ACTOR_TYPE_SEAL || type == ACTOR_TYPE_BASKET_REVERSE) {
@@ -190,7 +190,8 @@ THitActor* TYoshiTongue::findTarget(bool allowExtra, bool checkForward)
 			if (type == ACTOR_TYPE_WOOD_BARREL)
 				ok = 1;
 			if (type & HIT_CATEGORY_ENEMY ? true : false) {
-#if defined(VERSION_GMSP01) || defined(VERSION_GMSP01_NX)
+#if defined(VERSION_GMSP01) || defined(VERSION_GMSP01_NX) \
+    || defined(VERSION_GMSE01)
 				switch (type) {
 				case ACTOR_TYPE_SEAL:
 				case ACTOR_TYPE_EFFECT_ENEMY:
@@ -270,8 +271,9 @@ void TYoshiTongue::movement()
 
 		if (mHeldObject != nullptr) {
 			if (diff.length() < mMaxReach) {
+				f32 elasticity = mElasticity;
 				JGeometry::TVec3<f32> scale = mHeldObject->mScaling;
-				scale *= mElasticity;
+				scale *= elasticity;
 				if (scale.x < 0.01f)
 					scale.set(0.01f, 0.01f, 0.01f);
 				mHeldObject->mScaling = scale;
@@ -315,9 +317,8 @@ void TYoshiTongue::movement()
 			JGeometry::TVec3<f32> tpos = target->mPosition;
 			tpos.y += 0.5f * target->mDamageHeight;
 			JGeometry::TVec3<f32> oldTip = mTipPos;
-			JGeometry::TVec3<f32> step   = (tpos - mTipPos) * mExtendAmount;
-			mTipPos                      = mTipPos + step;
-			mInitialVelocity             = mTipPos - oldTip;
+			mTipPos = mTipPos + (tpos - mTipPos) * mExtendAmount;
+			mInitialVelocity = mTipPos - oldTip;
 
 			if ((tpos - mTipPos).length() < 200.0f
 			    && target->receiveMessage(this, HIT_MESSAGE_TAKE) == true) {

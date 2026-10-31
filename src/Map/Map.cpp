@@ -280,7 +280,7 @@ void TMap::update()
 	if (SMS_CheckMarioFlag(MARIO_FLAG_VISIBLE))
 		return;
 
-	const JGeometry::TVec3<f32>& camPos = gpCamera->getUnk124();
+	const Vec& camPos = gpCamera->getUnk124();
 	f32 height = gpMapObjWave->getHeight(camPos.x, camPos.y, camPos.z);
 	if (height == gpCamera->getUnk124().y || gpCamera->getUnk124().y > height) {
 		if (!unk20) {

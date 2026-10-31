@@ -92,7 +92,7 @@ void TAmenbo::initParticle()
 
 void TAmenbo::bind()
 {
-	if (checkLiveFlag(LIVE_FLAG_UNK10))
+	if (checkLiveFlag(LIVE_FLAG_UNK10) != 0)
 		return;
 
 	JGeometry::TVec3<f32> local_14 = mPosition;

@@ -45,6 +45,10 @@ Some differences look easy, but they are the most difficult to fix:
 Fix these last, after everything else in the file matches.
 First fix wrong instructions and the order of instructions.
 
+A zero change in objdiff's fuzzy percentage does not prove identical code.
+A measured `TBombHei::genEventCoin` setter-interface probe kept 99.70588% while its frame grew from 72 to 96 bytes; the target frame is 80 bytes.
+Compare raw function bodies and read the diff before calling a probe neutral.
+
 ### Priority order
 
 1. Match the control flow and the order of calls.
@@ -296,9 +300,13 @@ A body inside the class body sets `Q_INLINE`.
 For such a function, MWCC does not run `CInline_IsSmallFunction` and does not read `#pragma dont_inline`.
 The same constructor inlined with 14, 16 and 26 statements.
 
-A member of a **class template** defined outside the class body is never marked inlinable: it is always a `bl`.
-Move the body into the class to inline it at every site.
-This changes every site, so do it only when every caller in the ROM inlines it.
+In GC 1.2.5 controls on a primary `TVec3` class template, moving coordinate-constructor and setter definitions outside the class without `inline` left calls where the ROM expands those operations.
+Adding explicit `inline` preserved caller instructions in the same three game TUs.
+Both out-of-class setter forms changed the original local symbol to weak, so check emission and linkage as well as caller instructions.
+
+A fully specialized class is different.
+Moving `TVec3<f32>`'s copy constructor, assignment and binary operator definitions outside the specialized class, with `inline` on the definitions, preserved every function body, name and binding in 50 probes across ten game TUs.
+Definition placement did not change these measured vector inline paths.
 
 ### The inline pass ladder
 
@@ -311,6 +319,9 @@ Each pass permits a smaller callee:
 | 1: calls that a pass-0 expansion uncovered | 10 |
 | 2 | 7 |
 | 3 | 3 |
+
+These budgets compare `CInlineInfo::nstmts` directly, including saved labels.
+The initial 15-statement gate excludes `ST_NOP` and `ST_LABEL`, so its count is not interchangeable with the saved count.
 
 **There is no pass 4.**
 MWCC never scans a body that a pass-3 expansion inserted, so every call in it stays a `bl`.
@@ -342,9 +353,15 @@ A call statement at pass 0 is always expanded, except in these cases:
    A `CI_CanInline6` callee is pasted in anyway.
    An `if` condition is not a conditional part.
    In `new T(...)`, the constructor call is on the unconditional side, so even a `CI_CanInline3` constructor expands.
-2. **The statement is not an expression statement** (the call is the full expression of a `return`, `if`, `switch`), **and the callee has a `return` before its last statement**.
-3. The site came out of another expansion (pass 1 or more), and the callee is over that pass's budget.
-4. The callee is `CI_CanInline0`, its body is not compiled yet, it is not inlinable, or it is a virtual call through the vtable.
+2. The site came out of another expansion (pass 1 or more), and the callee is over that pass's budget.
+3. The callee is `CI_CanInline0`, its body is not compiled yet, it is not inlinable, or it is a virtual call through the vtable.
+
+An early return alone does not keep a call out of line.
+`try_inline_statement` refuses a call that is the full expression of a `return`, `if` or `switch` when the callee has an earlier return.
+But `inline_statement` then falls back to `inline_expression`.
+With `inline_statement_mode == 1`, a `CI_CanInline3` call is queued for `expand_inline_calls`, which inserts its statements before the caller's statement.
+Measured with GC 1.2.5: an early-return predicate expanded at pass 0 in all three forms, while the same predicate stayed a call on the right side of `&&`, where the mode was 0.
+Check the fallback before treating a refusal in one inline path as the final decision.
 
 Reason 1 is the clean way to keep one site out of line without a change to the callee.
 Case: `JALListD::searchD` is inlined in `searchGroup` but called in `startSoundSetDyna`.
@@ -355,9 +372,21 @@ Inside it, the first `theNerve()` is unconditional and expands, and the same cal
 
 These things do **not** change an inline decision:
 
-- the shape of the arguments,
+- the shape of the arguments, for the direct callee's `can_inline` test,
 - `Class::f(...)` against `this->f(...)`,
 - the position of an in-class body in the file (`-inline deferred` generates every function at the end of the TU).
+
+Argument setup can still change the context of nested calls after expansion.
+In a measured `checkGroundPlane` probe, an `isLegal()` receiver loaded through `*outPlane` left the nested `isIllegalData()` call out of line.
+Binding that receiver to a local pointer let the standalone function expand the predicate, but its callers still reached the predicate at pass 2 with `inline_statement_mode == 0`.
+The bodies with early returns and one final return had four and seven statements, respectively; both fitted that pass's budget, so the conditional context kept the call.
+With the latter predicate, explicit return branches in the ground wrapper restored its 100% match and removed the losses in matching percentages in its two callers.
+The combined predicate change still regressed other functions and was rejected globally.
+Do not add receiver locals just to change stack offsets.
+
+An operator's matching standalone body does not establish its inline call layers.
+In a measured sweep of fourteen TUs, direct component bodies for the compound vector operators kept the original `operator-=` and scalar `operator*=` bodies of 52 and 40 bytes, but removed map-required weak `add`, `sub`, `scale` and `div` definitions and regressed 35 functions.
+Keep the primitive-helper calls when the caller assembly and map require them.
 
 `#pragma dont_inline` is read once, at the end of the function.
 It cannot turn off inlining for one statement, and it also stops the function that it wraps from being inlinable.
@@ -411,6 +440,10 @@ The SMS map also lists only functions that got an out-of-line copy somewhere.
 So the absence of an inline from TP, TWW or our map is not proof that it did not exist.
 A one-line forwarder on an outer class (`a->getBlock()->set(x)` written as `a->set(x)`) is fair to try, if you measure it.
 
+An experiment with `-sym on` in ten JP game TUs moved weak functions into separate `.text` sections and added debug information.
+All 1,065 named function bodies remained byte-identical, with the same sizes and bindings.
+A whole-section hash can therefore change without a code change: compare each function using its symbol's section, offset and size.
+
 Two changes that each measure as zero can be worth an inline level together.
 Case: `J3DModelData::entryTexMtxAnimator`. `J3DMaterial::setTexMtx()` alone changed nothing, a named local for the `new` alone was worse, and both together matched.
 
@@ -442,9 +475,13 @@ When MWCC does not inline something, it emits a weak or local copy into the call
 That copy is the original body. Diff it before you change the inline.
 If the ROM calls an inline out of line at some sites and expands it at others, the difference is at those sites, not in its body.
 
-The number of `blr` instructions in a weak copy tells you the shape of the body.
-Case: the weak copy of `TSpineBase::getLatestNerve` has two `blr` and no join, so it is `if (mCurrent) return mCurrent; return mPrevious;`, not a ternary.
+The weak copy of `TSpineBase::getLatestNerve` has two `blr` and no join, consistent with `if (mCurrent) return mCurrent; return mPrevious;`.
 A ternary would make it `CI_CanInline6` and change every inline decision around it.
+
+Identical standalone instructions can hide different inline classifications.
+For both `TBGCheckData::isIllegalData` (`bool`) and `TTakeActor::isTaken` (`BOOL`), the ternary and explicit `if`/`return` forms produce the original 28-byte body, including two `blr` instructions.
+For `isIllegalData`, the actual compiler records the ternary as `CI_CanInline6` with one statement, and the explicit returns as `CI_CanInline3` with four statements.
+Check the inline metadata and callers before choosing between them; the standalone bytes do not distinguish these source forms.
 
 ### `-inline deferred` and the order of definitions
 
@@ -490,6 +527,12 @@ A member at **offset 0** is not a CSE candidate: its address is the bare `this`,
 The merge follows the **spelling**, not the address.
 A read inside an inlined accessor is bound to that call's temp, so a later direct read of the same member is a **second load**.
 An extra `lwz` of a member that MWCC could keep in a register is evidence of an inline accessor.
+
+For an expression return, `InlineWrapResult` adds `EFORCELOAD` when the expression contains an indirection or a call.
+The argument-safety check treats that wrapper as unsafe, even when the argument is unmodified.
+In `getUnk104().getPoint()`, the real compiler therefore binds the getter's `this + 0x104` result to a temporary before expanding `getPoint`.
+The accessor's `0x4` member offset is then added to that temporary.
+Pointer-return and reference-return versions of this getter produce the same binding; changing the return ABI does not remove it.
 
 Case: `SDLModel::entry()`. The target loads `mSdlFlags`, tests two bits, then loads it again for `mSdlFlags |= FLAG_UNK1`.
 `if (!(mSdlFlags & FLAG_UNK8) || ...)` gave one load (87.5%).
@@ -590,7 +633,14 @@ The same test tells a getter from a raw field read.
 A getter such as `u8 getStage() const { return unk0; }` forces its value into a temp.
 The temp keeps a 4-byte slot, and when two such calls are the arguments of one `bl`, MWCC evaluates them in reverse order.
 Case: `TMarDirector::currentStateFinalize` loads `mCurrArea.unk1` before `unk0` for `endStageEntranceDemo`; only the getters do this.
-An accessor that returns a reference leaves no trace, so you cannot prove or refute it this way.
+For a reference return used as another inline's receiver, inspect the argument binding: the forced result can retain an intermediate address, as in `getUnk104().getPoint()` above.
+
+### Multidimensional array indices
+
+Preserve the dimensions that the original index calculation shows.
+In `TMario::damageExec`, three indices have byte strides of 32, 16 and 4 in a 64-byte table: `u32 animationTypes[2][2][4]`.
+Writing the same access as a flattened index changes MWCC's shift/add sequence.
+Restoring the dimensions reproduces that sequence without changing the table's bytes.
 
 ### Array element reads
 
@@ -634,6 +684,14 @@ If our build gives `addi rI, rIndex, 4` and `lwzx`, write the member access out 
 CSE merges the two loads, so the second read costs no instruction.
 Case: both loops of `J3DDeformer::deform`.
 
+### GC 1.2.5's backend add propagation is inactive
+
+`COpt_AddPropagation` tests `instruction->flags & fRecordBit | 0x400`.
+The `| 0x400` makes the condition always true, so every entry skips propagation.
+This was checked in both the compiler decompilation's `AddPropagation.c` and the actual GC 1.2.5 executable: `and eax, 0x80; or eax, 0x400; je ...` at `0x520cec`.
+Do not expect this pass to combine two already-selected address additions.
+Inspect the front-end expression and instruction selection when an extra base-plus-member address survives.
+
 ### Repeated vector components: the offset-0 field
 
 When one object gives `x`, `y` and `z` to two stores in sequence, front-end CSE makes one temp for `y` and `z` but two for `x`.
@@ -642,6 +700,20 @@ The second `x` temp carries the value, so `x` is coloured after `y` and `z`: `x=
 Access through a pointer or reference makes `x` an offset too, but it keeps the address live and can rotate the GPRs.
 
 A target that loads three times and stores six times proves a hidden copy that is not address-taken, for example the temp of an implicit `Vec` to `TVec3<f32>` conversion.
+
+### Reusing a vector changes address CSE
+
+One local used by two in-place transforms can give different loads from two separate locals.
+The front end can share addresses of the reused local's `y` and `z` fields.
+Stores through these addresses carry `fIsPtrOp` (`0x40`), so backend value numbering invalidates cached memory reads after them.
+Later optimization can fold the addresses into ordinary stack operands while preserving that flag.
+The final assembly hides this earlier aliasing effect.
+
+Case: `CLBRotatePosAndUp` uses the same ROM slot, `0x200(r1)`, for both point rotations.
+Reusing the first vector for the second rotation fixes both missing third-row source-`x` reloads and all related register differences.
+The real compiler's PCode shows a direct `x` store and indirect `y`/`z` stores with the reused local; with separate locals all three stores are direct and both repeated `x` loads disappear.
+All 286 instructions then agree apart from stack offsets.
+The reused ROM slot and the instruction changes support this source choice independently of the frame size.
 
 ### Local structs stay in registers only when you touch them field by field
 
@@ -661,6 +733,12 @@ MWCC then cannot keep the values in float registers and puts them on the stack.
 
 When you set the four bytes of a `Color` one by one, MWCC cannot merge them into bit operations in a register, and keeps the struct on the stack.
 
+### Trivial base assignment
+
+With this repository's SDK `Vec` declaration and GC 1.2.5, `static_cast<Vec&>(*this) = other` compiles as a built-in copy; changing it to `static_cast<Vec*>(this)->operator=(other)` fails with `undefined identifier '__as'`.
+The function named `generate_copy_constructor` in `CDecl.c` actually creates assignment members, and explains this result: `Vec` has no vtable, virtual bases, assignment overloads, or class members/bases with assignment operators that require such a member.
+This observation does not establish how Nintendo expressed the vector assignment.
+
 ### By-value class parameters and copy constructors
 
 A class passed by value is copied through memory, also for a two-word POD:
@@ -678,7 +756,8 @@ lwz  r0, 0x3c(r1)     ; the copy is read back from memory
 This shape in the target is a reliable sign of a by-value parameter (in `EventWatcher.cpp`, `getNameRefPtr(TSpcSlice)`).
 A named local initialized from the same call also gives two objects, but it moves the first field through a register.
 
-For a by-value class argument to a function that MWCC does **not** inline:
+For a by-value class argument to a function that MWCC does **not** inline,
+with the default `simple_class_byval on`:
 
 - With a **user-declared** copy constructor, MWCC builds the argument in place: one store, no copy.
 - With the **implicit** copy constructor, MWCC copies through a separate stack temp: `lwz`/`stw` pairs from slot to slot.
@@ -686,6 +765,18 @@ For a by-value class argument to a function that MWCC does **not** inline:
 So stack-to-stack word copies around a small value class mean that the class has **no** user-declared copy constructor.
 The weak `__ct__<C>FRC<C>` symbol in the map does not prove a declared copy constructor.
 Case: deleting the hand-written copy constructor of `TSingleNodeLinkList::iterator` took `TPerformList::perform` from 41.8% to 99.1%.
+
+`CDecl_CompleteClass` computes the internal class flag `0x4000` before it declares an implicit copy constructor.
+For `TVec3<f32>`, the user-declared copy constructor sets that flag; the implicit constructor leaves it clear.
+`CClass_ReferenceArgument` consults the flag with `simple_class_byval on`, and the presence of a copy constructor with the option off.
+Real compiler traces confirmed the two decisions for the same 12-byte vector.
+Both paths still pass that argument through memory; the difference is how the caller constructs and copies it (`CExpr.c:argumentpromotion`, `CFunc.c:setup_function_arguments`).
+Optimization can remove an extra runtime copy while retaining different temporary slots, as in the HamuKuri control.
+
+Turning the option off makes an implicit vector copy constructor follow the declared-constructor path in the measured HamuKuri callers.
+That control restores three HamuKuri matches, but removes original iterator construction and word copies from the matching `TYoshiTongue::initInLoadAfter`.
+Both option controls leave the tested vector-regression bodies unchanged.
+These measurements support keeping the current option and explicit vector copy constructor; a matching standalone constructor does not establish either choice by itself.
 
 For `JUtility::TColor`:
 
@@ -700,6 +791,22 @@ For `JUtility::TColor`:
 `JUtility::TColor` has **no** destructor.
 `TSmplFader`'s constructor takes `TColor` by value and is inlined at every site, which `CI_CanInline0` forbids for a class with a destructor.
 Adding `~TColor() {}` was measured: 82 functions worse, 1 better. Do not try it again.
+
+The same restriction applies to a function returning a class with a user-declared destructor.
+`fn_00511180` in `CInline.c` checks the return type and every by-value class argument, and rejects inlining when either class has a destructor.
+An empty `TVec3<f32>` destructor was tested in ten game TUs: it emitted binary arithmetic operators and vector destructors absent from the maps, removed required weak leaf helpers, and worsened 70 functions.
+Keep the vector's destructor trivial.
+
+### Value-parameter storage and returned references
+
+GC 1.2.5 controls with an explicit copy constructor and destructor, for both a 4-byte class and a 12-byte `Vec`-derived class, put the copied value parameter in the caller.
+In `consume(borrow(value))`, where `borrow` returns a reference to that parameter, its destructor runs after `consume`.
+Binding the returned reference to a local does not delay that destructor: it runs before a consumer in the following statement.
+A returned named local is destroyed before the consumer, including when its body is expanded, and the compiler warns about returning a reference to an automatic variable.
+
+`CExpr.c:argumentpromotion` constructs the argument with `create_temp_node`; `CFunc.c` queues its destructor in the caller's expression cleanup.
+The parameter-return helper stayed out of line in these non-trivial controls, so these tests do not establish every inlined `TVec3` path or the original operator return types.
+The [C++98-era wording](https://www.open-std.org/jtc1/sc22/wg21/docs/wp/html/nov97-2/expr.html) ends the formal parameter lifetime when the function returns; the measured storage and destruction order is not a portable C++98 guarantee.
 
 ### Triviality: user-declared destructors
 
@@ -1158,6 +1265,7 @@ An inline expansion makes one temp for each of these:
 
 Per site: `4 × (expression receiver) + sum(sizeof each expression argument) + 4 × (named locals) + 4 × (non-void return)`.
 Count it before you guess a spelling.
+Use this as a starting count for the tested expression contexts; forced-load materialization can reserve more slots.
 
 | Inlined call | Dead 4-byte slots |
 |---|---|
@@ -1181,10 +1289,15 @@ The return temp survives only a **bare** discarded call:
 
 So a release-stripped assert reserves a slot only if its condition is a bare call to such an inline.
 
-In a chain, an accessor reserves frame only when its result is the receiver of **another inlined call**.
-The last link of a chain is free.
-An accessor whose result goes into an out-of-line `bl` is free.
-Raw field access through the same pointers costs nothing.
+In the pointer/reference chains measured below, extra slots came from using an accessor result as the receiver of **another inlined call**.
+The terminal accessor and a result passed directly to an out-of-line `bl` added no slots in those measurements.
+The corresponding raw field expressions added no slots.
+
+Memory-reading scalar getters can reserve forced-load temporaries when their results initialize locals.
+`InlineWrapResult` wraps memory reads in `EFORCELOAD`, and `lower_expression_to_statements` materializes each wrapper as a local.
+In JP `TYoshiTongue::findTarget`, replacing two actor-type reads with `getActorType()` added three unused `u32` slots and one receiver slot, while all non-stack instructions stayed identical.
+The first site added 12 bytes of local storage and the second added 4 bytes.
+Measure each site's result use before applying a table entry to it.
 
 | `changeBck` expression | Frame |
 |---|---|
@@ -1336,8 +1449,16 @@ node.mPos.set(param_1);       // lfs/stfs (float copy)
 node.mPos.set(ex, ey, ez);    // lfs/stfs, like component assignment
 ```
 
-The `TVec3` copy constructor is `TVec3(const TVec3& b) : Vec(b) { }`, and the ROM's weak copies are 0x1C of `lwz`/`stw`.
+The ROM's weak `TVec3` copy constructor is 0x1C of `lwz`/`stw`.
+Both `TVec3(const TVec3& b) : Vec(b) { }` and an implicit copy constructor reproduce that body, so the weak symbol does not establish whether the constructor was user-declared.
+The distinction still affects callers: removing the explicit constructor reproduces the missing word copies in `TWaterEmitInfo` and `TMultiMtxEffect::setup`, but changes stack offsets in three previously matching HamuKuri callers.
+The explicit constructor remains pending independent evidence for those callers; do not add locals to recover their frames.
 Any new `TVec3` copy theory must keep the weak `set<f>`, `__ami__` and `TSplinePath::getPoint` out of line.
+
+Initialization can elide a vector copy that assignment retains.
+In `TRope::moveHead` and `TSphereLink::moveHead`, declare the existing displacement vector first, then assign the position difference to it.
+Both targets contain six word-copy instructions missing from the initialized-local form.
+This restores those instructions without changing the shared arithmetic operators; `TRope::moveHead` then differs only in stack offsets.
 
 ### A `Vec` passed as `const TVec3<f32>&`
 
@@ -1399,6 +1520,11 @@ else
 The return value is copied into the variable with one more `fmr` per arm, which a plain ternary does not do.
 A TU with no `.sdata` section cannot use them with literal arguments.
 `MsClamp` takes its floats by value (the map gives `MsClamp<f>__Ffff`).
+
+Check the relocation targets even when the instruction bytes agree.
+In JP `TTamaNoko::landEffect`, four `0.8f` arguments share one `.sdata2` literal in the ROM and with by-value scalar operators.
+Changing the binary scalar operators to take `const f32&` leaves the raw function bytes identical, but creates four distinct `.sdata` literals instead.
+The reference signature therefore fails the literal-pool check even though its instructions and frame are unchanged.
 
 ## Loops
 

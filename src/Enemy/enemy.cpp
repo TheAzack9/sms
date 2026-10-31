@@ -273,10 +273,7 @@ void TSpineEnemy::setGoalPathFromGraph()
 {
 	JGeometry::TVec3<f32> local_48;
 	unk124->getCurrent().getPoint(&local_48);
-	TPathNode local_3c(local_48);
-	unkF4  = local_3c;
-	unk104 = local_3c;
-	unk114.clear();
+	setGoalPath(local_48);
 }
 
 void TSpineEnemy::goToInitialVisibleNode(f32, f32) { }
@@ -420,7 +417,15 @@ void TSpineEnemy::goToDirLimitedNextGraphNode(f32 param_1)
 	unk12C = 0.0f;
 }
 
-void TSpineEnemy::updateStayCount(f32) { }
+void TSpineEnemy::updateStayCount(f32 distance)
+{
+	if (abs(distance - unk12C) < 100.0f) {
+		unk128 += 1;
+	} else {
+		unk128 = 0;
+		unk12C = distance;
+	}
+}
 
 BOOL TSpineEnemy::turnToCurPathNode(f32 param_1)
 {
@@ -481,12 +486,7 @@ void TSpineEnemy::walkToCurPathNode(f32 march_speed, f32 turn_speed,
 	vel += polarXZ(mRotation.y, march_speed);
 	mPositionDelta = vel;
 
-	if (abs(fVar7 - unk12C) < 100.0f) {
-		unk128 += 1;
-	} else {
-		unk128 = 0;
-		unk12C = fVar7;
-	}
+	updateStayCount(fVar7);
 }
 
 void TSpineEnemy::zigzagToCurPathNode(f32 march_speed, f32 turn_speed,
@@ -499,12 +499,15 @@ void TSpineEnemy::zigzagToCurPathNode(f32 march_speed, f32 turn_speed,
 
 	f32 f29 = angle * unk124->unk10;
 
-	f32 dVar9 = (unkF4.getPoint() - mPosition).length();
+	JGeometry::TVec3<f32> delta = unkF4.getPoint();
+	f32 dVar9 = (delta -= mPosition).length();
 
 	f32 dVar13 = MsWrap(dVar9, 0.0f, cycle);
 
-	dVar13 *= 360.0f * (1.0f / cycle);
-	dVar13 += getPhaseShift();
+	cycle = 360.0f * (1.0f / cycle);
+	f32 phaseShift = getPhaseShift();
+	dVar13 *= cycle;
+	dVar13 += phaseShift;
 
 	f29 *= MsSin(dVar13);
 
@@ -541,12 +544,7 @@ void TSpineEnemy::zigzagToCurPathNode(f32 march_speed, f32 turn_speed,
 	vel += polarXZ(mRotation.y, march_speed);
 	mPositionDelta = vel;
 
-	if (abs(dVar9 - unk12C) < 100.0f) {
-		unk128 += 1;
-	} else {
-		unk128 = 0;
-		unk12C = dVar9;
-	}
+	updateStayCount(dVar9);
 }
 
 void TSpineEnemy::doShortCut()
@@ -554,7 +552,8 @@ void TSpineEnemy::doShortCut()
 	if (unk114.size() <= 0)
 		return;
 
-	if ((unkF4.getPoint() - mPosition).length() < getBodyRadius()) {
+	JGeometry::TVec3<f32> delta = unkF4.getPoint();
+	if ((delta -= mPosition).length() < getBodyRadius()) {
 		if (!unk114.empty())
 			unkF4 = unk114.pop();
 		return;

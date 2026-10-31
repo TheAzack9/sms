@@ -44,6 +44,7 @@
 #include <System/MarDirector.hpp>
 #include <System/MarioGamePad.hpp>
 #include <System/Particles.hpp>
+#include <macros.h>
 #include <dolphin/mtx.h>
 #include <math.h>
 #include <stdlib.h>
@@ -261,8 +262,7 @@ void TBubble::appendItem()
 	if (item && item->receiveMessage(this, HIT_MESSAGE_TAKE)) {
 		item->appear();
 		item->mPosition = mPosition;
-		item->mVelocity.set(0.0f, 15.0f, 0.0f);
-		item->offLiveFlag(LIVE_FLAG_UNK10);
+		item->setVelocityAndFlag10(0.0f, 15.0f, 0.0f);
 		mHeldObject = item;
 		unk198      = item;
 	}
@@ -1124,10 +1124,8 @@ void TBossTelesa::moveObject()
 	if (checkLiveFlag(LIVE_FLAG_DEAD))
 		return;
 
-	JGeometry::TVec3<f32> cameraPos;
-	cameraPos.set(gpCamera->getUnk124());
-	JGeometry::TVec3<f32> marioDiff = *gpMarioPos - cameraPos;
-	f32 cameraDist                  = marioDiff.length();
+	JGeometry::TVec3<f32> marioDiff = *gpMarioPos - gpCamera->getUnk124();
+	f32 cameraDist                = marioDiff.length();
 
 	if (cameraDist < mCameraMoveLimit) {
 		mCameraOffsetY += mCameraMoveSp * (gpMarioPos->y - gpCamera->unk148.y);
@@ -1154,10 +1152,10 @@ void TBossTelesa::moveObject()
 		mMActor->getFrameCtrl(3)->setFrame(0.0f);
 	}
 
-	if (isInDamage()) {
+	if (mSpine->getCurrentNerve() == &TNerveBossTelesaDie::theNerve()) {
 		u8 maxHp       = getMaxHitPoints();
-		u8 targetAlpha = mNormalAlpha + (maxHp - mHitPoints) * 30;
-		targetAlpha    = MsClamp<u8>(targetAlpha, 0, 0xFE);
+		u8 targetAlpha = MsClamp<u8>(mNormalAlpha + (maxHp - mHitPoints) * 30,
+		                             0, 0xFE);
 
 		if ((mMActor->checkCurBckFromIndex(7)
 		     && mMActor->getFrameCtrl(0)->getFrame() > 50.0f)
@@ -1169,12 +1167,17 @@ void TBossTelesa::moveObject()
 		}
 	}
 
-	JGeometry::TVec3<f32> cameraDiff = *gpMarioPos - cameraPos;
-	unk19C                           = mRoulettes[0]->mPosition;
+	int rollingRouletteNum = 0;
+	JGeometry::TVec3<f32> cameraDiff = *gpMarioPos - gpCamera->getUnk124();
+	unk19C                         = mRoulettes[0]->mPosition;
 	unk19C.x += 0.67f * cameraDiff.x;
 	unk19C.z += 0.67f * cameraDiff.z;
 
-	switch (getRollingRouletteNum()) {
+	for (int i = 0; i < ARRAY_COUNT(mRoulettes); ++i)
+		if (mRoulettes[i]->unk13C != 0.0f)
+			++rollingRouletteNum;
+
+	switch (rollingRouletteNum) {
 	case 1:
 		SMSGetMSound()->startSoundActor(MSD_SE_BS_TELESA_RLT_MOVE1, &unk19C, 0,
 		                                nullptr, 0, 4);
@@ -1212,12 +1215,12 @@ void TBossTelesa::moveObject()
 	} else {
 		J3DModel* model = mMActor->getModel();
 		MtxPtr node1    = model->getAnmMtx(1);
-		MtxPtr node7    = model->getAnmMtx(7);
 
 		mBodyCollision->mPosition.set(node1[0][3], node1[1][3] - 200.0f,
 		                              node1[2][3]);
 		mKillSmallEnemyCollision->mPosition.set(
 		    node1[0][3], mPosition.y - 350.0f, node1[2][3]);
+		MtxPtr node7 = mMActor->getModel()->getAnmMtx(7);
 		mTongueCollision->mPosition.set(node7[0][3], node7[1][3] - 350.0f,
 		                                node7[2][3]);
 	}
@@ -1849,15 +1852,15 @@ void TBossTelesa::generateSlotItem()
 			if (i == 0 || i == 4) {
 				mRedPeppers[i]->makeObjAppeared();
 				mRedPeppers[i]->offLiveFlag(LIVE_FLAG_HIDDEN);
-				mRedPeppers[i]->mVelocity.set(
-				    normalizedDir.x * fruitSpeedRange.rand(), -2.0f,
+				mRedPeppers[i]->setVelocityAndFlag10(
+				    normalizedDir.x * fruitSpeedRange.rand(),
+				    -2.0f,
 				    normalizedDir.z * fruitSpeedRange.rand());
-				mRedPeppers[i]->offLiveFlag(LIVE_FLAG_UNK10);
 				if (i == 0) {
-					mRedPeppers[i]->mVelocity.set(
-					    normalizedDir.x * fruitSpeedRange.rand() * 2.0f, -2.0f,
+					mRedPeppers[i]->setVelocityAndFlag10(
+					    normalizedDir.x * fruitSpeedRange.rand() * 2.0f,
+					    -2.0f,
 					    normalizedDir.z * fruitSpeedRange.rand() * 2.0f);
-					mRedPeppers[i]->offLiveFlag(LIVE_FLAG_UNK10);
 				}
 				mRedPeppers[i]->mRotation.set(0.0f, 90.0f, 0.0f);
 				mSpitObjs[mSpitObjNum] = mRedPeppers[i];
@@ -1865,10 +1868,10 @@ void TBossTelesa::generateSlotItem()
 				mFruits[i]->makeObjAppeared();
 				mFruits[i]->offLiveFlag(LIVE_FLAG_HIDDEN);
 
-				mFruits[i]->mVelocity.set(
-				    normalizedDir.x * fruitSpeedRange.rand(), -2.0f,
+				mFruits[i]->setVelocityAndFlag10(
+				    normalizedDir.x * fruitSpeedRange.rand(),
+				    -2.0f,
 				    normalizedDir.z * fruitSpeedRange.rand());
-				mFruits[i]->offLiveFlag(LIVE_FLAG_UNK10);
 				mSpitObjs[mSpitObjNum] = mFruits[i];
 			}
 
@@ -2034,6 +2037,26 @@ bool TBossTelesa::checkAllItemDead()
 	return true;
 }
 
+void TBossTelesa::forceAllItemKill()
+{
+	for (int i = 0; i < mSpitObjNum; ++i) {
+		if (mSpitObjs[i]->mHolder) {
+			SMS_SendMessageToMario(mSpitObjs[i], HIT_MESSAGE_DETACH);
+			mSpitObjs[i]->mHolder = nullptr;
+		}
+
+		mSpitObjs[i]->mPosition.set(0.0f, 0.0f, 0.0f);
+		mSpitObjs[i]->onHitFilter(HIT_FILTER_NO_COLLISION);
+
+		if (mSpitObjs[i]->checkLiveFlag(LIVE_FLAG_DEAD))
+			continue;
+
+		mSpitObjs[i]->kill();
+		gpMarioParticleManager->emit(PARTICLE_MS_TLS_CHANGE,
+		                             &mSpitObjs[i]->mPosition, 0, nullptr);
+	}
+}
+
 void TBossTelesa::rollRouletteCircle()
 {
 	for (int i = 0; i < 3; ++i)
@@ -2065,26 +2088,6 @@ void TBossTelesa::forceHide()
 
 	mSpine->reset();
 	mSpine->setNext(&TNerveBossTelesaHide::theNerve());
-}
-
-void TBossTelesa::forceAllItemKill()
-{
-	for (int i = 0; i < mSpitObjNum; ++i) {
-		if (mSpitObjs[i]->mHolder) {
-			SMS_SendMessageToMario(mSpitObjs[i], HIT_MESSAGE_DETACH);
-			mSpitObjs[i]->mHolder = nullptr;
-		}
-
-		mSpitObjs[i]->mPosition.set(0.0f, 0.0f, 0.0f);
-		mSpitObjs[i]->onHitFilter(HIT_FILTER_NO_COLLISION);
-
-		if (mSpitObjs[i]->checkLiveFlag(LIVE_FLAG_DEAD))
-			continue;
-
-		mSpitObjs[i]->kill();
-		gpMarioParticleManager->emit(PARTICLE_MS_TLS_CHANGE,
-		                             &mSpitObjs[i]->mPosition, 0, nullptr);
-	}
 }
 
 void TBossTelesa::fanfale()
@@ -2257,10 +2260,9 @@ DEFINE_NERVE(TNerveBossTelesaHideWait, TLiveActor)
 		boss->mIsSpicy = 0;
 
 		u8 maxHp = boss->getMaxHitPoints();
-		u8 alpha
-		    = TBossTelesa::mNormalAlpha + (maxHp - boss->getHitPoints()) * 30;
-		alpha          = MsClamp<u8>(alpha, 0, 0xFE);
-		boss->unk34C.a = alpha;
+		boss->unk34C.a = MsClamp<u8>(
+		    TBossTelesa::mNormalAlpha + (maxHp - boss->getHitPoints()) * 30,
+		    0, 0xFE);
 
 		boss->mSlot->mScaling.set(0.0f, 0.0f, 0.0f);
 		boss->getMActor()->setBrkFromIndex(2);

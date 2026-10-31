@@ -9,7 +9,7 @@ class TMapWireActorManager;
 
 class TMapWireActor : public TTakeActor {
 public:
-	TMapWireActor(const char*);
+	TMapWireActor(const char* name = "アクター補助");
 
 	virtual BOOL receiveMessage(THitActor* sender, u32 message);
 	virtual MtxPtr getTakingMtx() { return nullptr; }

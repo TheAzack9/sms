@@ -478,9 +478,8 @@ DEFINE_NERVE(TNerveMameGessoJitabata, TLiveActor)
 				if (spine->getTime() > self->unk194->mSLFreezeWait.get())
 					self->setBckAnm(5);
 			} else if (self->isBckAnm(5)) {
-				// TODO: operator- inline is wrong here, too much stack frame
-				if ((self->unk104.getPoint() - self->getPosition()).length()
-				    > 300.0f)
+				JGeometry::TVec3<f32> delta = self->unk104.getPoint();
+				if ((delta -= self->getPosition()).length() > 300.0f)
 					self->unk1EC = 0;
 
 				spine->pushAfterCurrent(&TNerveMameGessoWait::theNerve());

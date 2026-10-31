@@ -410,7 +410,11 @@ void TMario::initValues()
 	unk468 = 0.0f;
 	unk46C = 0.0f;
 
+#ifdef VERSION_GMSJ01
 	mAnmSound = new MAnmSound(SMSGetMSound());
+#else
+	mAnmSound = new MAnmSoundMario(SMSGetMSound());
+#endif
 	mAnmSound->initAnmSound(nullptr, 1, 0.0f);
 
 	unk4EC          = 0;

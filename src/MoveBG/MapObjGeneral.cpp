@@ -500,7 +500,7 @@ void TMapObjGeneral::calcVelocity()
 
 void TMapObjGeneral::bind()
 {
-	if (checkLiveFlag(LIVE_FLAG_UNK10))
+	if (checkLiveFlag(LIVE_FLAG_UNK10) != 0)
 		return;
 
 	if (mBinder != nullptr) {

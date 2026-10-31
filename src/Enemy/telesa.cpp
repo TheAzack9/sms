@@ -664,7 +664,7 @@ void TTelesa::forceKill()
 {
 	if (!mGroundPlane->isLegal() && !isAirborne()) {
 		if (mSpine->getCurrentNerve() != &TNerveTelesaDie::theNerve())
-			mSpine; // huh???
+			return;
 	}
 }
 

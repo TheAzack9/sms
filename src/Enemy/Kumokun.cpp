@@ -917,7 +917,8 @@ const TBGCheckData* TKumokun::checkWallPlane(JGeometry::TVec3<f32>* param_1,
 	TBGWallCheckRecord record(param_1->x, param_1->y + param_2, param_1->z,
 	                          param_3, 1, 0);
 
-	if (gpMap->isTouchedWallsAndMoveXZ(&record))
+	BOOL touchedWall = gpMap->isTouchedWallsAndMoveXZ(&record);
+	if (touchedWall > 0)
 		wall = record.mResultWalls[0];
 
 	param_1->x = record.mCenter.x;
@@ -931,11 +932,10 @@ const TBGCheckData* TKumokun::checkFloorPlane(JGeometry::TVec3<f32>* param_1,
 {
 	const TBGCheckData* floor = nullptr;
 
-	f32 yTmp2 = param_1->y;
-	f32 fVar7
-	    = gpMap->checkGround(param_1->x, yTmp2 + param_2, param_1->z, &floor);
+	f32 fVar7 = gpMap->checkGround(param_1->x, param_1->y + param_2,
+	                               param_1->z, &floor);
 	fVar7 += 1.0f;
-	if (yTmp2 <= fVar7 + 0.05f) {
+	if (param_1->y <= fVar7 + 0.05f) {
 		param_1->y = fVar7;
 	} else {
 		floor = nullptr;
@@ -948,10 +948,9 @@ const TBGCheckData* TKumokun::checkRoofPlane(JGeometry::TVec3<f32>* param_1,
                                              f32 param_2)
 {
 	const TBGCheckData* roof = nullptr;
-	f32 y                    = param_1->y;
-	f32 dVar6 = gpMap->checkRoof(param_1->x, y, param_1->z, &roof);
+	f32 dVar6 = gpMap->checkRoof(param_1->x, param_1->y, param_1->z, &roof);
 	dVar6 -= 1.0f;
-	f32 fVar8 = dVar6 - y;
+	f32 fVar8 = dVar6 - param_1->y;
 	if (0.0f <= fVar8 && fVar8 < param_2)
 		param_1->y = dVar6;
 	else

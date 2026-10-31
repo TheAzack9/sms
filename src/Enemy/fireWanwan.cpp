@@ -151,10 +151,9 @@ void TTailRubber::bindOne(Node& node)
 	const TBGCheckData* checkData;
 	f32 fVar1 = gpMap->checkGround(next.x, next.y + 40.0f, next.z, &checkData);
 	fVar1 += 1.0f;
-	fVar1 += 20.0f;
-	if (next.y <= 0.05f + fVar1) {
+	if (next.y <= 0.05f + (20.0f + fVar1)) {
 		node.mVel.set(0.0f, 0.0f, 0.0f);
-		next.y = fVar1;
+		next.y = 20.0f + fVar1;
 	}
 
 	gpMap->isTouchedOneWallAndMoveXZ(&next.x, next.y + 40.0f, &next.z, 20.0f);
@@ -904,7 +903,7 @@ void TFireWanwan::decideTarget(const JGeometry::TVec3<f32>& param_1)
 		                 1.0f);
 	}
 
-	unk1BC.setEulerY(DEG_TO_RAD(mRotation.y));
+	unk1BC.setEulerY(0.017453294f * mRotation.y);
 }
 
 void TFireWanwan::doAdjustTarget()
@@ -1955,7 +1954,7 @@ DEFINE_NERVE(TNerveFireWanwanRecoverGraph, TLiveActor)
 		self->unk124->mCurrIdx = -1;
 		self->goToShortestNextGraphNode();
 
-		self->decideTarget(self->unk104.getPoint());
+		self->decideTarget(self->getUnk104().getPoint());
 	}
 
 	// TODO: inline?
